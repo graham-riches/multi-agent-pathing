@@ -1,5 +1,5 @@
 """
-    @file Tile.py
+    @file tile.py
     @brief Tile object representing one unit of 2D space
     @author Evan Morcom
 """
