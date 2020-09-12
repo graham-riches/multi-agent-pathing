@@ -37,4 +37,3 @@ class Tile:
         Set the state of a Tile to free
         """
         self.state = TileState.FREE
-        
