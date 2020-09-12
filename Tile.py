@@ -36,3 +36,4 @@ class Tile:
         Set the state of a Tile to free
         """
         self.state = Tile_state_e.FREE
+        
