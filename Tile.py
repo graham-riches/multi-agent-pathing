@@ -3,37 +3,38 @@
     @brief Tile object representing one unit of 2D space
     @author Evan Morcom
 """
-import numpy as np
 from enum import Enum
 
-class Tile_state_e(Enum):
+
+class TileState(Enum):
     BLOCKED = 1
     FREE = 2
 
+
 class Tile:
-    def __init__(self, initial_state: Tile_state_e) -> None:
+    def __init__(self, initial_state: TileState) -> None:
         """
         Create a Tile with the given state.
         :param state: The initial state of the Tile (blocked or free)
         """
         self.state = initial_state
 
-    def getState(self) -> Tile_state_e:
+    def get_state(self) -> TileState:
         """
         Get the current state of a Tile
         :return state: The current state of the Tile (blocked or free)
         """   
         return self.state
     
-    def setBlocked(self) -> None:
+    def set_blocked(self) -> None:
         """
         Set the state of a Tile to blocked
         """
-        self.state = Tile_state_e.BLOCKED
+        self.state = TileState.BLOCKED
 
-    def setFree(self) -> None:
+    def set_free(self) -> None:
         """
         Set the state of a Tile to free
         """
-        self.state = Tile_state_e.FREE
+        self.state = TileState.FREE
         
