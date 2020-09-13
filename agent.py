@@ -24,7 +24,7 @@ class AgentState(Enum):
 
 
 class AgentLocation:
-    def __init__(self, x: int = 0, y: int = 0) -> None:
+    def __init__(self, x: float = 0, y: float = 0) -> None:
         """
         Location manager object to keep track of an agents X any Y location
         :param: x: x location
@@ -34,11 +34,11 @@ class AgentLocation:
         self._y = y
 
     @property
-    def X(self) -> int:
+    def X(self) -> float:
         return self._x
 
     @X.setter
-    def X(self, position: int) -> None:
+    def X(self, position: float) -> None:
         self._x = position
 
     @property
@@ -46,7 +46,7 @@ class AgentLocation:
         return self._y
 
     @Y.setter
-    def Y(self, position: int) -> None:
+    def Y(self, position: float) -> None:
         self._y = position
 
     def update(self, direction: AgentCoordinates, update_position: float) -> None:
@@ -57,9 +57,9 @@ class AgentLocation:
         :return: None
         """
         if direction == AgentCoordinates.X:
-            self._x += update_position
+            self._x = update_position
         elif direction == AgentCoordinates.Y:
-            self._y += update_position
+            self._y = update_position
 
 
 class AgentMotionProfile:
@@ -249,7 +249,11 @@ class Agent:
         self.state = AgentState.MOVING
         # reset the current time step
         self._current_time_step = 0
-        # set the agent's initial position
+        # add the agents current position to the profile
+        if self._current_direction == AgentCoordinates.X:
+            self._motion_profile.position_profile += self.location.X
+        else:
+            self._motion_profile.position_profile += self.location.Y
         self.location.update(self._current_direction, self._motion_profile.position_profile[self._current_time_step])
 
     def update(self) -> AgentState:
@@ -257,6 +261,8 @@ class Agent:
         Method called every base time step to update the agent object
         :return: the agents current state. Higher level simulation can trigger an update when state flips to IDLE
         """
+        if self.state == AgentState.IDLE:
+            return
         self._current_time_step += 1
         self.location.update(self._current_direction, self._motion_profile.position_profile[self._current_time_step])
 

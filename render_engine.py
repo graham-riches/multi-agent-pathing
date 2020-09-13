@@ -14,21 +14,20 @@ from agent import Agent
 from tile import TileState
 
 
-BASE_SCALING_DPI = 40
-
-
 class Renderer:
-    def __init__(self, arena: Arena, timestep: float) -> None:
+    def __init__(self, arena: Arena, timestep: float, dpi_scaling: int = 40) -> None:
         """
         Create a new canvas for rendering the simulation. The base canvas is based on an Arena object,
         which controls the domain of the simulation
         :param: arena: the arena object
         :param: timestep: the animation timestep in seconds
+        :param: dpi_scaling: the dpi scaling to use for one grid square
         :return:
         """
         # create the figure canvas with scaling
         self.x_size, self.y_size = arena.get_dimensions()
-        self.fig = plt.figure(figsize=(self.x_size, self.y_size), dpi=BASE_SCALING_DPI)
+        self.dpi = dpi_scaling
+        self.fig = plt.figure(figsize=(self.x_size, self.y_size), dpi=self.dpi)
 
         # create a list of objects to render
         self.arena = arena
@@ -57,7 +56,7 @@ class Renderer:
         generates a grid for the game
         :return: 2D array
         """
-        return np.zeros((self.y_size*BASE_SCALING_DPI, self.x_size*BASE_SCALING_DPI))
+        return np.zeros((self.y_size*self.dpi, self.x_size*self.dpi))
 
     def render_arena(self) -> None:
         """
@@ -66,10 +65,10 @@ class Renderer:
         """
         for x in range(self.x_size):
             for y in range(self.y_size):
-                y_start = y*BASE_SCALING_DPI
-                y_end = y_start + BASE_SCALING_DPI
-                x_start = x * BASE_SCALING_DPI
-                x_end = x_start + BASE_SCALING_DPI
+                y_start = y*self.dpi
+                y_end = y_start + self.dpi
+                x_start = x * self.dpi
+                x_end = x_start + self.dpi
                 if self.arena.get_tile_state(x, y) == TileState.FREE:
                     self.render_grid[y_start:y_end, x_start:x_end] = self.colors_dict['tile_free']
                 else:
@@ -83,10 +82,10 @@ class Renderer:
         :return:
         """
         # find the agents current location range in pixels (x any y)
-        start_x_pos = int(BASE_SCALING_DPI * agent.location.X)
-        end_x_pos = start_x_pos + BASE_SCALING_DPI
-        start_y_pos = int(BASE_SCALING_DPI * agent.location.Y)
-        end_y_pos = start_y_pos + BASE_SCALING_DPI
+        start_x_pos = int(self.dpi * agent.location.X)
+        end_x_pos = start_x_pos + self.dpi
+        start_y_pos = int(self.dpi * agent.location.Y)
+        end_y_pos = start_y_pos + self.dpi
 
         # color those pixels
         self.render_grid[start_y_pos:end_y_pos, start_x_pos:end_x_pos] = agent_number
@@ -98,14 +97,14 @@ class Renderer:
         """
         ax = plt.gca()
         # Major ticks
-        ax.set_xticks(np.arange(0, self.x_size * BASE_SCALING_DPI, BASE_SCALING_DPI))
-        ax.set_yticks(np.arange(0, self.y_size * BASE_SCALING_DPI, BASE_SCALING_DPI))
+        ax.set_xticks(np.arange(0, self.x_size * self.dpi, self.dpi))
+        ax.set_yticks(np.arange(0, self.y_size * self.dpi, self.dpi))
         # Labels for major ticks
         ax.set_xticklabels(np.arange(0, self.x_size, 1))
         ax.set_yticklabels(np.arange(0, self.y_size, 1))
         # Minor ticks
-        ax.set_xticks(np.arange(-.5, self.x_size * BASE_SCALING_DPI, BASE_SCALING_DPI), minor=True)
-        ax.set_yticks(np.arange(-.5, self.y_size * BASE_SCALING_DPI, BASE_SCALING_DPI), minor=True)
+        ax.set_xticks(np.arange(-.5, self.x_size * self.dpi, self.dpi), minor=True)
+        ax.set_yticks(np.arange(-.5, self.y_size * self.dpi, self.dpi), minor=True)
         # labels
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
@@ -131,6 +130,7 @@ class Renderer:
         self.render_arena()
         total_agents = len(self.agents)
         for idx, agent in enumerate(self.agents):
+            agent.update()
             self.render_agent(agent, self.total_elements - total_agents + idx)
         plt.imshow(self.render_grid, cmap='tab20', vmin=0, vmax=self.total_elements)
         self.add_image_elements()
@@ -140,5 +140,5 @@ class Renderer:
         function that will run an infinite loop running the animation update
         :return:
         """
-        self._animation = animation.FuncAnimation(self.fig, self.update, frames=None, interval=self.dt)
+        self._animation = animation.FuncAnimation(self.fig, self.update, frames=None, interval=1)
         plt.show()

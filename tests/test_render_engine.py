@@ -19,7 +19,8 @@ BASE_DPI_SCALING = 40
 class TestRenderer(unittest.TestCase):
 
     def test_generate_grid(self):
-        self.renderer = Renderer(self.arena, TIMESTEP)
+        self.arena = Arena(15, 20)
+        self.renderer = Renderer(self.arena, TIMESTEP, BASE_DPI_SCALING)
         grid = self.renderer.generate_grid()
         self.assertTupleEqual((20*BASE_DPI_SCALING, 15*BASE_DPI_SCALING), np.shape(grid))
 
