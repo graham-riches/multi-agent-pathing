@@ -200,9 +200,9 @@ class AgentMotionProfile:
         # integrate the velocity profile to get the position
         for i in range(1, samples):
             self.position_profile[i] = self.position_profile[i - 1] + dt * vel_profile[i]
+            if abs(self.position_profile[i]) >= distance:
+                self.position_profile[i] = distance*move_dir
 
-        # remove the integration error by fudging the last value
-        self.position_profile[-1] = distance*move_dir
         return samples
 
     def plot_profile(self) -> None:
