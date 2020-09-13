@@ -43,11 +43,15 @@ class TestAgentMotionProfile(unittest.TestCase):
         profile_length = self.motion_profile.generate_motion_profile(4, 0.005)
         # Note: this length is based on some sketchy testing, but it's roughly correct
         self.assertEqual(693, profile_length)
+        # uncomment to view the motion profile
+        # self.motion_profile.plot_profile()
 
     def test_trapezoidal_profile(self):
         profile_length = self.motion_profile.generate_motion_profile(8, 0.001)
         # Note: this length is based on some sketchy testing, but it's roughly correct
         self.assertEqual(4917, profile_length)
+        # uncomment to view the motion profile
+        # self.motion_profile.plot_profile()
 
     def test_negative_triangular_profile(self):
         profile_length = self.motion_profile.generate_motion_profile(-4, 0.005)

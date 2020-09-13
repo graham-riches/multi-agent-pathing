@@ -9,6 +9,7 @@
     will update it's location whenever it's update method is called.
 """
 import numpy as np
+import matplotlib.pyplot as plt
 from enum import Enum
 from agent_exceptions import MotionError
 
@@ -159,11 +160,15 @@ class AgentMotionProfile:
             samples = round(total_time / timestep)
             self.time_vector = np.linspace(0, total_time, samples)
             accel_profile = np.ones(samples)
+            vel_profile = np.zeros(samples)
 
             # determine how samples are accelerating and how many are decelerating
             accel_done_sample = round(samples*accel_actual_time / total_time)
             accel_profile[0:accel_done_sample] = move_dir * self._acceleration
             accel_profile[accel_done_sample:-1] = -1 * move_dir * self._deceleration
+            vel_profile[0:accel_done_sample] = self.time_vector[0:accel_done_sample]*move_dir*self._acceleration
+            temp_time = self.time_vector - self.time_vector[accel_done_sample]
+            vel_profile[accel_done_sample:-1] = vel_profile[accel_done_sample-1] - temp_time[accel_done_sample:-1] * move_dir * self._deceleration
 
         else:
             # determine the amount of time at constant velocity
@@ -175,28 +180,41 @@ class AgentMotionProfile:
             samples = round(total_time / timestep)
             self.time_vector = np.linspace(0, total_time, samples)
             accel_profile = np.zeros(samples)
+            vel_profile = np.zeros(samples)
             accel_samples = round(samples * self._accel_time / total_time)
             decel_samples = round(samples * self._decel_time / total_time)
             const_vel_samples = samples - (accel_samples + decel_samples)
             accel_profile[0:accel_samples] = move_dir * self._acceleration
             accel_profile[-decel_samples:-1] = -1 * move_dir * self._deceleration
+            vel_profile[0:accel_samples] = self.time_vector[0:accel_samples] * self._acceleration * move_dir
+            vel_profile[accel_samples:(samples-decel_samples)] = self._velocity * move_dir
+            temp_time = self.time_vector - self.time_vector[-decel_samples]
+            vel_profile[-decel_samples:-1] = temp_time[-decel_samples:-1]*self._deceleration*-move_dir + (self._velocity * move_dir)
 
-        # generate empty position and velocity vectors
-        vel_profile = np.zeros(samples)
+        # generate empty position vectors
         self.position_profile = np.zeros(samples)
 
         # dt may not be exactly the same as the time-step so re-calculate it
         dt = self.time_vector[1]
 
-        # integrate the acceleration profile twice to get the velocity
-        for i in range(1, samples):
-            vel_profile[i] = vel_profile[i-1] + dt*accel_profile[i]
+        # integrate the velocity profile to get the position
         for i in range(1, samples):
             self.position_profile[i] = self.position_profile[i - 1] + dt * vel_profile[i]
 
         # remove the integration error by fudging the last value
         self.position_profile[-1] = distance*move_dir
         return samples
+
+    def plot_profile(self) -> None:
+        """
+        Displays the motion profile
+        :return: None
+        """
+        fig = plt.figure()
+        ax = plt.subplot(1, 1, 1)
+        ax.plot(self.position_profile)
+        plt.show()
+
 
 
 class Agent:
