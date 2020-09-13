@@ -9,11 +9,12 @@ from render_engine import Renderer
 from agent import Agent, AgentCoordinates, AgentState
 from arena import Arena
 
-BASE_TIME_STEP = 0.05
+BASE_TIME_STEP = 0.01
 BASE_DPI = 80
 
 # setup a quick arena
-arena = Arena(10, 10)
+arena = Arena(10, 20)
+arena.set_blockage([3], list(range(6)))
 
 # setup the renderer
 renderer = Renderer(arena, BASE_TIME_STEP, BASE_DPI)
@@ -22,5 +23,9 @@ renderer = Renderer(arena, BASE_TIME_STEP, BASE_DPI)
 agent = Agent(0, 0, BASE_TIME_STEP)
 renderer.add_agent(agent)
 
-agent.start_move(AgentCoordinates.X, 4)
-renderer.run()
+agent.start_move(AgentCoordinates.Y, 4)
+
+
+while True:
+    agent.update()
+    renderer.update()
