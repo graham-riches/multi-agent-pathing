@@ -145,6 +145,7 @@ class AgentMotionProfile:
         """
         # get the move direction
         move_dir = np.sign(distance)
+        distance = abs(distance)
 
         if self.__is_move_triangular(distance):
             # motion profile is triangular
@@ -194,7 +195,7 @@ class AgentMotionProfile:
             self.position_profile[i] = self.position_profile[i - 1] + dt * vel_profile[i]
 
         # remove the integration error by fudging the last value
-        self.position_profile[-1] = distance
+        self.position_profile[-1] = distance*move_dir
         return samples
 
 
@@ -254,6 +255,7 @@ class Agent:
             self._motion_profile.position_profile += self.location.X
         else:
             self._motion_profile.position_profile += self.location.Y
+        print(self._current_direction, self.state)
         self.location.update(self._current_direction, self._motion_profile.position_profile[self._current_time_step])
 
     def update(self) -> AgentState:

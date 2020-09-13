@@ -39,18 +39,20 @@ class TestAgentMotionProfile(unittest.TestCase):
         self.motion_profile.deceleration = -3
         self.assertEqual(3, self.motion_profile.deceleration)
 
-    def test_triangular_profile(self) -> None:
+    def test_triangular_profile(self):
         profile_length = self.motion_profile.generate_motion_profile(4, 0.005)
         # Note: this length is based on some sketchy testing, but it's roughly correct
         self.assertEqual(693, profile_length)
 
-    def test_trapezoidal_profile(self) -> None:
+    def test_trapezoidal_profile(self):
         profile_length = self.motion_profile.generate_motion_profile(8, 0.001)
         # Note: this length is based on some sketchy testing, but it's roughly correct
         self.assertEqual(4917, profile_length)
 
-    def test_agent_control(self):
-        pass
+    def test_negative_triangular_profile(self):
+        profile_length = self.motion_profile.generate_motion_profile(-4, 0.005)
+        # Note: this length is based on some sketchy testing, but it's roughly correct
+        self.assertEqual(693, profile_length)
 
 
 class TestAgentLocation(unittest.TestCase):
@@ -67,7 +69,7 @@ class TestAgentLocation(unittest.TestCase):
         self.location.update(AgentCoordinates.Y, 0.5)
         self.assertEqual(0.5, self.location.Y)
         self.location.update(AgentCoordinates.X, -3)
-        self.assertEqual(-2.5, self.location.X)
+        self.assertEqual(-3, self.location.X)
 
 
 class TestAgent(unittest.TestCase):
