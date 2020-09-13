@@ -47,6 +47,17 @@ class Arena:
             for y in y_values:
                 self._grid[x][y].set_blocked()
 
+    def clear_blockage(self, x_values: list, y_values: list) -> None:
+        """
+        clear a routing blockage
+        :param x_values: x coordinates to clear
+        :param y_values: y coordinates to clear
+        :return: None
+        """
+        for x in x_values:
+            for y in y_values:
+                self._grid[x][y].set_free()
+
     def get_tile_state(self, x_location: int, y_location: int) -> TileState:
         """
         Get the tile state for a specific location
@@ -55,6 +66,3 @@ class Arena:
         :return: tile state
         """
         return self._grid[x_location][y_location].get_state()
-
-
-

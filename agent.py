@@ -216,7 +216,6 @@ class AgentMotionProfile:
         plt.show()
 
 
-
 class Agent:
     def __init__(self, x_position: int, y_position: int, simulation_time_step: float) -> None:
         """

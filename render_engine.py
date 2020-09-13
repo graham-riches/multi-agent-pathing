@@ -12,6 +12,10 @@ from arena import Arena
 from agent import Agent
 from tile import TileState
 
+# pygame buttons
+LEFT = 1
+RIGHT = 3
+
 
 class Renderer:
     def __init__(self, arena: Arena, timestep: float, dpi_scaling: int = 40) -> None:
@@ -76,6 +80,20 @@ class Renderer:
         rect_location = (x_pos, y_pos, self.dpi, self.dpi)
         pygame.draw.rect(self.screen, self.colors_dict['agent'], rect_location)
 
+    def handle_click_event(self, set: bool, x_position: int, y_position: int):
+        """
+        handle a click event on the game grid
+        :param set: was it a left click (set) or a right click (clear)
+        :param x_position: x location in pixels
+        :param y_position: y location in pixels
+        """
+        x_ind = int(x_position/self.dpi)
+        y_ind = int(y_position/self.dpi)
+        if set:
+            self.arena.set_blockage([x_ind], [y_ind])
+        else:
+            self.arena.clear_blockage([x_ind], [y_ind])
+
     def update(self) -> None:
         """
         Update the rendering canvas
@@ -83,4 +101,11 @@ class Renderer:
         """
         pygame.display.flip()
         # flush the events queue
-        pygame.event.get()
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if event.button == RIGHT:
+                    self.handle_click_event(False, pos[0], pos[1])
+                elif event.button == LEFT:
+                    self.handle_click_event(True, pos[0], pos[1])

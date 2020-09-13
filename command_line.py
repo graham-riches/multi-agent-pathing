@@ -65,14 +65,20 @@ class CommandLine:
     def blockage(self, args: list) -> bool:
         """
         Set a blockage in the game arena
-            Usage: blockage [x] [y]
+            Usage: blockage [set/clear] [x] [y]
+            [type] - 'set' or 'clear'
         """
-        if len(args) < 2:
+        if len(args) < 3:
             self.help(['blockage'])
             return False
-        x = int(args[0])
-        y = int(args[1])
-        self.arena.set_blockage([x], [y])
+        x = int(args[1])
+        y = int(args[2])
+        if args[0] == 'set':
+            self.arena.set_blockage([x], [y])
+        elif args[0] == 'clear':
+            self.arena.clear_blockage([x], [y])
+        else:
+            return False
         return True
 
     def parse_command(self, command: str) -> bool:

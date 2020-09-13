@@ -7,16 +7,17 @@
 """
 import unittest
 from command_line import CommandLine
-from agent import Agent, AgentCoordinates
+from tile import TileState
+from agent import Agent
 from arena import Arena
 
 
 class TestCommandLine(unittest.TestCase):
     def setUp(self):
         time_step = 0.05
-        agents = [Agent(0, 0, time_step)]
-        arena = Arena(10, 20)
-        self.cli = CommandLine(arena, agents)
+        self.agents = [Agent(0, 0, time_step)]
+        self.arena = Arena(10, 20)
+        self.cli = CommandLine(self.arena, self.agents)
 
     def test_help(self):
         command = 'help'
@@ -34,6 +35,7 @@ class TestCommandLine(unittest.TestCase):
         self.assertTrue(retval)
 
     def test_blockage(self):
-        command = 'blockage 4 4'
+        command = 'blockage set 4 4'
         retval = self.cli.parse_command(command)
         self.assertTrue(retval)
+        self.assertEqual(TileState.BLOCKED, self.arena.get_tile_state(4, 4))
