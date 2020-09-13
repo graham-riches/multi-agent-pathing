@@ -46,6 +46,13 @@ class TestAgentMotionProfile(unittest.TestCase):
         # uncomment to view the motion profile
         # self.motion_profile.plot_profile()
 
+    def test_special_case(self):
+        self.motion_profile.acceleration = 6
+        self.motion_profile.deceleration = 6
+        self.motion_profile.velocity = 6
+        self.motion_profile.generate_motion_profile(5, 0.005)
+        self.motion_profile.plot_profile()
+
     def test_trapezoidal_profile(self):
         profile_length = self.motion_profile.generate_motion_profile(8, 0.001)
         # Note: this length is based on some sketchy testing, but it's roughly correct
@@ -101,3 +108,16 @@ class TestAgent(unittest.TestCase):
         for i in range(sim_steps-1):
             agent_state = self.agent.update()
         self.assertEqual(AgentState.IDLE, agent_state)
+
+    def test_start_move_through_task_api(self):
+        task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 4])
+        self.agent.start_task(task)
+        sim_steps = self.agent._movement_steps
+        self.assertGreater(sim_steps, 0)
+
+    def test_setting_params_through_task(self):
+        task = AgentTask(AgentTasks.UPDATE_MOTION_PARAMETERS, [1, 2, 3])
+        self.agent.start_task(task)
+        self.assertEqual(1, self.agent._motion_profile.acceleration)
+        self.assertEqual(2, self.agent._motion_profile.deceleration)
+        self.assertEqual(3, self.agent._motion_profile.velocity)

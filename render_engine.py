@@ -80,16 +80,16 @@ class Renderer:
         rect_location = (x_pos, y_pos, self.dpi, self.dpi)
         pygame.draw.rect(self.screen, self.colors_dict['agent'], rect_location)
 
-    def handle_click_event(self, set: bool, x_position: int, y_position: int):
+    def handle_click_event(self, set_blocked: bool, x_position: int, y_position: int):
         """
         handle a click event on the game grid
-        :param set: was it a left click (set) or a right click (clear)
+        :param set_blocked: was it a left click (set) or a right click (clear)
         :param x_position: x location in pixels
         :param y_position: y location in pixels
         """
         x_ind = int(x_position/self.dpi)
         y_ind = int(y_position/self.dpi)
-        if set:
+        if set_blocked:
             self.arena.set_blockage([x_ind], [y_ind])
         else:
             self.arena.clear_blockage([x_ind], [y_ind])

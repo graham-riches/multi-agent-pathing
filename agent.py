@@ -24,6 +24,22 @@ class AgentState(Enum):
     MOVING = 1
 
 
+class AgentTasks(Enum):
+    MOVE = 0
+    UPDATE_MOTION_PARAMETERS = 1
+
+
+class AgentTask:
+    def __init__(self, task_id: AgentTasks, args: list) -> None:
+        """
+        Create an agent task object
+        :param task_id:
+        :param args:
+        """
+        self.task_id = task_id
+        self.args = args
+
+
 class AgentLocation:
     def __init__(self, x: float = 0, y: float = 0) -> None:
         """
@@ -202,7 +218,7 @@ class AgentMotionProfile:
             self.position_profile[i] = self.position_profile[i - 1] + dt * vel_profile[i]
             if abs(self.position_profile[i]) >= distance:
                 self.position_profile[i] = distance*move_dir
-
+        self.position_profile[-1] = distance*move_dir
         return samples
 
     def plot_profile(self) -> None:
@@ -237,6 +253,9 @@ class Agent:
         self._current_time_step = 0
         self._motion_profile = AgentMotionProfile()  # use default motion parameters
         self._current_direction = None
+        # function callbacks for task handling
+        self._callbacks = {AgentTasks.MOVE: self.start_move,
+                           AgentTasks.UPDATE_MOTION_PARAMETERS: self.set_kinematic_parameters}
 
     def set_kinematic_parameters(self, acceleration: float, deceleration: float, velocity: float) -> None:
         """
@@ -272,7 +291,6 @@ class Agent:
             self._motion_profile.position_profile += self.location.X
         else:
             self._motion_profile.position_profile += self.location.Y
-        print(self._current_direction, self.state)
         self.location.update(self._current_direction, self._motion_profile.position_profile[self._current_time_step])
 
     def update(self) -> AgentState:
@@ -281,7 +299,7 @@ class Agent:
         :return: the agents current state. Higher level simulation can trigger an update when state flips to IDLE
         """
         if self.state == AgentState.IDLE:
-            return
+            return self.state
         self._current_time_step += 1
         self.location.update(self._current_direction, self._motion_profile.position_profile[self._current_time_step])
 
@@ -290,5 +308,11 @@ class Agent:
             self.state = AgentState.IDLE
         return self.state
 
-
-
+    def start_task(self, task: AgentTask) -> None:
+        """
+        Start a new agent task. This is a generic method for passing different tasks to the agent from one function
+        :param task: the AgentTask class
+        :return: None
+        """
+        # call the callback
+        self._callbacks[task.task_id](*task.args)
