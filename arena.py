@@ -77,3 +77,85 @@ class Arena:
         :return: tile state
         """
         return self._grid[x_location][y_location].get_state()
+
+    def is_boundary_tile(self, x_location: int, y_location: int) -> bool:
+        """
+        check if a tile is at the edge of the arena
+        :param x_location: x coordinate
+        :param y_location: y coordinate
+        :return: boolean True/False
+        """
+        x_is_edge = self.is_edge_x(x_location)
+        y_is_edge = self.is_edge_y(y_location)
+        return x_is_edge or y_is_edge
+
+    def is_edge_x(self, x_location: int) -> bool:
+        """
+        test if an x coordinate is an edge
+        :param x_location:
+        :return:
+        """
+        if (x_location < (self._x_size - 1)) and (x_location > 0):
+            x_is_edge = False
+        else:
+            x_is_edge = True
+        return x_is_edge
+
+    def is_edge_y(self, y_location: int) -> bool:
+        """
+        test if an y coordinate is an edge
+        :param y_location:
+        :return:
+        """
+        if (y_location < (self._y_size - 1)) and (y_location > 0):
+            y_is_edge = False
+        else:
+            y_is_edge = True
+        return y_is_edge
+
+    def get_neighbours(self, x_location: int, y_location: int) -> list:
+        """
+        Get all of a tiles valid neighbours
+        :param x_location: x-coordinate
+        :param y_location: y_coordinate
+        :return: list of neighbour coordinate tuples
+        """
+        x_is_edge = self.is_edge_x(x_location)
+        y_is_edge = self.is_edge_y(y_location)
+        neighbours = list()
+        # handle all edges and corner cases (heh)
+        if x_is_edge and y_is_edge:
+            # add the two closest nodes
+            if x_location == 0:
+                node_1 = (x_location + 1, y_location)
+                node_2 = (x_location, y_location + 1) if y_location == 0 else (x_location, y_location - 1)
+            else:
+                node_1 = (x_location - 1, y_location)
+                node_2 = (x_location, y_location + 1) if y_location == 0 else (x_location, y_location - 1)
+            neighbours.append(node_1)
+            neighbours.append(node_2)
+        elif x_is_edge and not y_is_edge:
+            # add the upper and lower neighbours
+            neighbours.append((x_location, y_location + 1))
+            neighbours.append((x_location, y_location - 1))
+            # add the internal neighbour
+            if x_location == 0:
+                neighbours.append((x_location + 1, y_location))
+            else:
+                neighbours.append((x_location - 1, y_location))
+        elif y_is_edge and not x_is_edge:
+            # add the upper and lower neighbours
+            neighbours.append((x_location + 1, y_location))
+            neighbours.append((x_location - 1, y_location))
+            # add the internal neighbour
+            if y_location == 0:
+                neighbours.append((x_location, y_location + 1))
+            else:
+                neighbours.append((x_location, y_location - 1))
+        else:
+            # add all surrounding nodes
+            neighbours.append((x_location - 1, y_location))
+            neighbours.append((x_location + 1, y_location))
+            neighbours.append((x_location, y_location - 1))
+            neighbours.append((x_location, y_location + 1))
+        return neighbours
