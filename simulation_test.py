@@ -49,8 +49,6 @@ task_2 = AgentTask(AgentTasks.MOVE, [AgentCoordinates.Y, 10])
 task_3 = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, -10])
 task_4 = AgentTask(AgentTasks.MOVE, [AgentCoordinates.Y, -10])
 loop_tasks = [task_1, task_2, task_3, task_4]
-routing_manager.add_agent_task(0, task_1)
-routing_manager.add_agent_task(1, task_1)
 for task in loop_tasks:
     routing_manager.add_agent_task(0, task)
     routing_manager.add_agent_task(1, task)

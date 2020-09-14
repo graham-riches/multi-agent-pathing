@@ -25,6 +25,14 @@ class TestArena(unittest.TestCase):
             for y in y_values:
                 self.assertEqual(TileState.BLOCKED, self.arena.get_tile_state(x, y))
 
+    def test_set_reserved(self):
+        x_values = list(range(3))
+        y_values = [3]
+        self.arena.set_reserved(x_values, y_values)
+        for x in x_values:
+            for y in y_values:
+                self.assertEqual(TileState.RESERVED, self.arena.get_tile_state(x, y))
+
     def test_get_dimensions(self):
         dimensions = self.arena.get_dimensions()
         self.assertTupleEqual((5, 10), dimensions)

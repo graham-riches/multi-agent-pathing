@@ -8,6 +8,7 @@
 import unittest
 from agent import *
 from arena import *
+from tile import TileState
 from routing.routing_manager import RoutingManager, AgentEvent
 
 
@@ -28,3 +29,10 @@ class TestRoutingManager(unittest.TestCase):
         # signaling that the agent completed a task should kick off the next task
         self.routing_manager.signal_agent_event(0, AgentEvent.TASK_COMPLETED)
         self.assertEqual(self.routing_manager.agent_tasks[0], [])
+
+    def test_reserve_squares(self):
+        task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 4])
+        self.routing_manager.reserve_squares_for_routing(self.agent, task)
+        for i in range(1, 5):
+            self.assertEqual(TileState.RESERVED, self.arena.get_tile_state(i, 0))
+

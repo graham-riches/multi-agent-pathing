@@ -6,8 +6,9 @@
     manager object to control routing for an agent by managing what the arena/available squares
 """
 from enum import Enum
+import numpy as np
 from arena import Arena
-from agent import Agent, AgentCoordinates, AgentTask
+from agent import *
 from tile import TileState
 
 
@@ -25,22 +26,55 @@ class RoutingManager:
         self.arena = arena
         self.agents = agents
         self.agent_tasks = [list() for agent in self.agents]  # empty task list for each agent
+        self.agent_reserved_squares = [list() for agent in self.agents]  # empty reserved squares list
         # dictionary of functions to use as event handlers
         self.agent_callbacks = {AgentEvent.TASK_COMPLETED: self.update_agent_task}
 
     def update_agent_task(self, agent_id: int) -> None:
         """
-        An agent has finished it's last routing task, so update it
+        An agent has finished it's last routing task, so update the task
         :param agent_id: the ID of the agent
         :return:
         """
+        # clear any previous routing blockages
+        reserved_squares = self.agent_reserved_squares[agent_id]
+        if len(reserved_squares) > 0:
+            squares = reserved_squares.pop()
+            self.arena.clear_blockage(squares['x'], squares['y'])
         current_agent = self.agents[agent_id]
         task_list = self.agent_tasks[agent_id]
-        # agent tasks are a FIFO, so pop the first task off the list
         if len(task_list) > 0:
-            task_list.pop(0)
-        if len(task_list):
-            current_agent.start_task(task_list[0])
+            task = task_list.pop(0)
+            if task.task_id == AgentTasks.MOVE:
+                x, y = self.reserve_squares_for_routing(current_agent, task)
+                self.agent_reserved_squares[agent_id].append({'x': x, 'y': y})
+            current_agent.start_task(task)
+
+    def reserve_squares_for_routing(self, agent: Agent, task: AgentTask) -> tuple:
+        """
+        Reserve grid squares for routing an agent
+        :param agent: the agent being routed
+        :param task: the task containing the route details
+        :return:
+        """
+        x = int(agent.location.X)
+        y = int(agent.location.Y)
+        args = task.args
+        sign = np.sign(args[1])
+        if args[0] == AgentCoordinates.X:
+            x_start = x + 1 if sign > 0 else x - 1
+            x_target = int(x_start + args[1])
+            tiles = list(range(x_start, x_target, sign))
+            x_tiles = tiles
+            y_tiles = [y]
+        else:
+            y_start = y + 1 if sign > 0 else y - 1
+            y_target = int(y_start + args[1])
+            tiles = list(range(y_start, y_target, sign))
+            x_tiles = [x]
+            y_tiles = tiles
+        self.arena.set_reserved(x_tiles, y_tiles)
+        return x_tiles, y_tiles
 
     def add_agent_task(self, agent_id: int, task: AgentTask) -> None:
         """

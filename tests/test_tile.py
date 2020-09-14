@@ -22,3 +22,8 @@ class TestTile(TestCase):
         tile = Tile(TileState.BLOCKED)
         tile.set_free()
         self.assertTrue(tile.state == TileState.FREE)
+
+    def set_reserved(self):
+        tile = Tile(TileState.FREE)
+        tile.set_reserved()
+        self.assertTrue(tile.state == TileState.RESERVED)

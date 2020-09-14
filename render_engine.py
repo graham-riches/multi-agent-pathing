@@ -44,8 +44,8 @@ class Renderer:
         self.arena = arena
 
         # dict of color keys
-        self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'grid_lines': (255, 255, 255),
-                            'agent': (165, 255, 190)}
+        self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'tile_reserved': (60, 60, 60),
+                            'grid_lines': (255, 255, 255), 'agent': (165, 255, 190)}
         self.total_elements = len(self.colors_dict)
 
     def render_arena(self) -> None:
@@ -59,8 +59,10 @@ class Renderer:
                 x_pos = x * self.dpi
                 if self.arena.get_tile_state(x, y) == TileState.FREE:
                     color = self.colors_dict['tile_free']
-                else:
+                elif self.arena.get_tile_state(x, y) == TileState.BLOCKED:
                     color = self.colors_dict['tile_blocked']
+                else:
+                    color = self.colors_dict['tile_reserved']
                 # draw the tile
                 rect_location = (x_pos, y_pos, self.dpi, self.dpi)
                 pygame.draw.rect(self.screen, color, rect_location)

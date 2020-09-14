@@ -58,6 +58,17 @@ class Arena:
             for y in y_values:
                 self._grid[x][y].set_free()
 
+    def set_reserved(self, x_values: list, y_values: list) -> None:
+        """
+        reserve tiles for routing
+        :param x_values: x coordinates to reserve
+        :param y_values: y coordinates to reserve
+        :return: None
+        """
+        for x in x_values:
+            for y in y_values:
+                self._grid[x][y].set_reserved()
+
     def get_tile_state(self, x_location: int, y_location: int) -> TileState:
         """
         Get the tile state for a specific location
