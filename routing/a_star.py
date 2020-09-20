@@ -119,11 +119,11 @@ class AStar(Algorithm):
                 neighbour.calculate_total_cost()
                 # if the came from at this location is empty, the current path is guaranteed to be the most optimal
                 # path found so far
-                came_from_node = self.came_from[neighbour.location[0]][neighbour.location[1]]
+                came_from_node = self.came_from[int(neighbour.location[0])][int(neighbour.location[1])]
                 if (came_from_node is None) or (neighbour.travelled_cost < came_from_node.travelled_cost):
                     came_from_node = current_node
                     came_from_node.travelled_cost = neighbour.travelled_cost
-                    self.came_from[neighbour.location[0]][neighbour.location[1]] = came_from_node
+                    self.came_from[int(neighbour.location[0])][int(neighbour.location[1])] = came_from_node
                     if neighbour not in open_set:
                         open_set.append(neighbour)
         return status
@@ -139,7 +139,9 @@ class AStar(Algorithm):
         previous_node = self.came_from[self.target.location[0]][self.target.location[1]]
         while previous_node is not self.start:
             self.node_path.append(previous_node)
-            previous_node = self.came_from[previous_node.location[0]][previous_node.location[1]]
+            previous_node = self.came_from[int(previous_node.location[0])][int(previous_node.location[1])]
+        # append the start node
+        self.node_path.append(self.start)
         # reverse the list so that it goes start to end
         self.node_path.reverse()
 

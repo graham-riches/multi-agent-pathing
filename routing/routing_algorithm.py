@@ -51,9 +51,9 @@ class Algorithm(ABC):
             task_start_node = self.node_path.pop(0)
             last_node = self.node_path[0]
             if last_node.location[0] == task_start_node.location[0]:
-                task_direction = AgentCoordinates.X
-            elif last_node.location[1] == task_start_node.location[1]:
                 task_direction = AgentCoordinates.Y
+            elif last_node.location[1] == task_start_node.location[1]:
+                task_direction = AgentCoordinates.X
             else:
                 return RoutingStatus.INVALID_PATH
 
@@ -61,7 +61,7 @@ class Algorithm(ABC):
             nodes = list(self.node_path)
             pop_count = 0
             for next_node in nodes:
-                if task_direction == AgentCoordinates.X:
+                if task_direction == AgentCoordinates.Y:
                     if next_node.location[0] != last_node.location[0]:
                         break
                     else:
@@ -80,8 +80,8 @@ class Algorithm(ABC):
 
             # create the task and add it to the path list
             if task_direction == AgentCoordinates.X:
-                move_distance = last_node.location[1] - task_start_node.location[1]
-            else:
                 move_distance = last_node.location[0] - task_start_node.location[0]
+            else:
+                move_distance = last_node.location[1] - task_start_node.location[1]
             self.path.append(AgentTask(AgentTasks.MOVE, [task_direction, move_distance]))
         return RoutingStatus.SUCCESS

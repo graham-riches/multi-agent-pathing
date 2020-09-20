@@ -76,7 +76,7 @@ class Arena:
         :param y_location: the y location
         :return: tile state
         """
-        return self._grid[x_location][y_location].get_state()
+        return self._grid[int(x_location)][int(y_location)].get_state()
 
     def is_boundary_tile(self, x_location: int, y_location: int) -> bool:
         """

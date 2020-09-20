@@ -109,10 +109,12 @@ class TestAStar(unittest.TestCase):
         start_node.calculate_heuristic(target_node)
         self.assertEqual(18, start_node.heuristic_cost)
 
-    def test_routing_simple_path_returns(self):
+    def test_routing_simple_path(self):
         target = (4, 4)
         status = self.a_star.route(self.agents[0], target)
         self.assertEqual(RoutingStatus.SUCCESS, status)
+        # make sure the final nodes are correct
+        self.assertTupleEqual((4, 4), self.a_star.node_path[-1].location)
 
     def test_reconstruct_empty_path_is_invalid(self):
         self.a_star.node_path = list()
@@ -130,7 +132,7 @@ class TestAStar(unittest.TestCase):
         status = self.a_star.create_path()
         self.assertEqual(RoutingStatus.SUCCESS, status)
         # The order of the tasks should be: Move X 2, Move Y 2
-        task_direction = [AgentCoordinates.X, AgentCoordinates.Y]
+        task_direction = [AgentCoordinates.Y, AgentCoordinates.X]
         task_distance = [2, 2]
         for idx, task in enumerate(self.a_star.path):
             self.assertEqual(task_direction[idx], task.args[0])
@@ -138,14 +140,17 @@ class TestAStar(unittest.TestCase):
 
     def test_reconstruct_path_zig_zag(self):
         # force a list of nodes to be the node path
-        self.a_star.node_path = [Node((0, 0)), Node((0, 1)), Node((1, 1)), Node((1, 2)), Node((2, 2))]
+        self.a_star.node_path = [Node((0, 0)), Node((1, 0)), Node((1, 1)), Node((2, 1)), Node((2, 2)),
+                                 Node((3, 2)), Node((3, 3)), Node((4, 3)), Node((4, 4))]
         status = self.a_star.create_path()
         self.assertEqual(RoutingStatus.SUCCESS, status)
-        # this path should contain 4 tasks
-        self.assertEqual(4, len(self.a_star.path))
+        # this path should contain 8 tasks
+        self.assertEqual(8, len(self.a_star.path))
         # The order of the tasks should be: Move X 1, Move Y 1, Move X 1, Move Y 1
-        task_direction = [AgentCoordinates.X, AgentCoordinates.Y, AgentCoordinates.X, AgentCoordinates.Y]
-        task_distance = [1, 1, 1, 1]
+        task_direction = [AgentCoordinates.X, AgentCoordinates.Y, AgentCoordinates.X, AgentCoordinates.Y,
+                          AgentCoordinates.X, AgentCoordinates.Y, AgentCoordinates.X, AgentCoordinates.Y]
+        task_distance = [1, 1, 1, 1, 1, 1, 1, 1]
         for idx, task in enumerate(self.a_star.path):
+            print(task.args[0], task.args[1])
             self.assertEqual(task_direction[idx], task.args[0])
             self.assertEqual(task_distance[idx], task.args[1])

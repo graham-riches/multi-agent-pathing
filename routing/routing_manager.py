@@ -6,10 +6,10 @@
     manager object to control routing for an agent by managing what the arena/available squares
 """
 from enum import Enum
-import numpy as np
 from arena import Arena
 from agent import *
-from tile import TileState
+from routing.a_star import AStar
+from routing.status import RoutingStatus
 
 
 class AgentEvent(Enum):
@@ -64,13 +64,13 @@ class RoutingManager:
         if args[0] == AgentCoordinates.X:
             x_start = x + 1 if sign > 0 else x - 1
             x_target = int(x_start + args[1])
-            tiles = list(range(x_start, x_target, sign))
+            tiles = list(range(int(x_start), int(x_target), int(sign)))
             x_tiles = tiles
             y_tiles = [y]
         else:
             y_start = y + 1 if sign > 0 else y - 1
             y_target = int(y_start + args[1])
-            tiles = list(range(y_start, y_target, sign))
+            tiles = list(range(int(y_start), int(y_target), int(sign)))
             x_tiles = [x]
             y_tiles = tiles
         self.arena.set_reserved(x_tiles, y_tiles)
@@ -94,3 +94,19 @@ class RoutingManager:
         """
         # call the callback
         self.agent_callbacks[event](agent_id)
+
+    def route(self, agent_id: int, x_location: int, y_location: int) -> None:
+        """
+        Route an agent to a new location given by (x_location, y_location)
+        :param agent_id: the agent ID
+        :param x_location: x grid location
+        :param y_location: y grid location
+        :return:
+        """
+        # test out the AStar path finding
+        a_star = AStar(self.arena, self.agents)
+        status = a_star.route(self.agents[agent_id], (x_location, y_location))
+        if status == RoutingStatus.SUCCESS:
+            # add all the agent tasks
+            for task in a_star.path:
+                self.add_agent_task(agent_id, task)
