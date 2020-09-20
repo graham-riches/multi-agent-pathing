@@ -37,6 +37,14 @@ class Algorithm(ABC):
         """
         pass
 
+    @abstractmethod
+    def reset(self) -> None:
+        """
+        Reset the routing algorithm to clear any internal state variables
+        :return:
+        """
+        pass
+
     def create_path(self) -> RoutingStatus:
         """
         Traverses a list of nodes that compose the path's node_path and constructs a list of agent

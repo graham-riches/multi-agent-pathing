@@ -8,7 +8,7 @@
 from enum import Enum
 from arena import Arena
 from agent import *
-from routing.a_star import AStar
+from routing.routing_algorithm import Algorithm
 from routing.status import RoutingStatus
 
 
@@ -17,7 +17,7 @@ class AgentEvent(Enum):
 
 
 class RoutingManager:
-    def __init__(self, arena: Arena, agents: list) -> None:
+    def __init__(self, arena: Arena, agents: list, algorithm: Algorithm) -> None:
         """
         Start a routing manager object
         :param arena: the simulation arena
@@ -25,6 +25,7 @@ class RoutingManager:
         """
         self.arena = arena
         self.agents = agents
+        self.algorithm = algorithm
         self.agent_tasks = [list() for agent in self.agents]  # empty task list for each agent
         self.agent_reserved_squares = [list() for agent in self.agents]  # empty reserved squares list
         # dictionary of functions to use as event handlers
@@ -103,10 +104,9 @@ class RoutingManager:
         :param y_location: y grid location
         :return:
         """
-        # test out the AStar path finding
-        a_star = AStar(self.arena, self.agents)
-        status = a_star.route(self.agents[agent_id], (x_location, y_location))
+        self.algorithm.reset()
+        status = self.algorithm.route(self.agents[agent_id], (x_location, y_location))
         if status == RoutingStatus.SUCCESS:
             # add all the agent tasks
-            for task in a_star.path:
+            for task in self.algorithm.path:
                 self.add_agent_task(agent_id, task)

@@ -9,6 +9,7 @@ import threading
 from render_engine import Renderer
 from command_line import CommandLine
 from routing.routing_manager import *
+from routing.a_star import AStar
 from agent import *
 from arena import Arena
 
@@ -35,9 +36,11 @@ sim_agents = list()
 sim_agents.append(sim_agent)
 sim_agents.append(sim_agent_1)
 
+# setup the routing algorithm
+algorithm = AStar(sim_arena, sim_agents)
 
 # create a routing manager and use it to queue some tasks for our agent
-routing_manager = RoutingManager(sim_arena, sim_agents)
+routing_manager = RoutingManager(sim_arena, sim_agents, algorithm)
 
 # setup the renderer
 renderer = Renderer(sim_arena, sim_agents, routing_manager, BASE_TIME_STEP, BASE_DPI)

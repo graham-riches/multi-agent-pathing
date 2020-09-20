@@ -65,9 +65,24 @@ class AStar(Algorithm):
         Initialize an A* search object given a particular arena and a list of agents. Agent locations are considered
         as blockages that must be handled in the search
         """
-        # initialize the algorithm
-        super(AStar, self).__init__(arena, agents)
+        self.arena = arena
+        self.agents = agents
+
+        # initialize parent class
+        super(AStar, self).__init__(self.arena, self.agents)
         # initialize routing components
+        self.start = None
+        self.target = None
+        self.came_from = None
+        self.reset()
+
+    def reset(self) -> None:
+        """
+        Reset the algorithms internal properties
+        :return:
+        """
+        # re-initialize the algorithm parent class
+        super(AStar, self).__init__(self.arena, self.agents)
         self.start = None
         self.target = None
         self.came_from = None
