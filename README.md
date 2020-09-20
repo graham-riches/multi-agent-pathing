@@ -10,10 +10,10 @@ To install all the repository requirements:
 ``` pip install -r requirements.txt```
 
 # Running
-To run the current simulation runner (likely to change):  
-```python simulation_test.py```
+To run the current simulation/GUI interface:  
+```python simulation.py```
 
 
 # Samples
-The image below shows two agents path planning around an obstacle.
-![Here is a sample image](docs/imgs/sample.png)
+The gif below shows an agent using A* pathfinding to route around an obstacle course
+![Here is a sample image](docs/imgs/a_star_pathing.gif)
