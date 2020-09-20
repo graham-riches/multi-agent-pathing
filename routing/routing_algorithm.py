@@ -9,7 +9,7 @@
 
 from abc import ABC, abstractmethod
 from arena import Arena
-from agent import Agent
+from agent import *
 from routing.status import RoutingStatus
 
 
@@ -23,8 +23,8 @@ class Algorithm(ABC):
         """
         self.arena = arena
         self.agents = agents
-        # path list will contain the chosen route from start to end as a set of agent tasks
-        self.path = list()
+        self.node_path = list()  # contains all the nodes that are part of a target route
+        self.path = list()  # contains a list of agent tasks to create the route
 
     @abstractmethod
     def route(self, agent: Agent, target: tuple) -> RoutingStatus:
@@ -36,3 +36,52 @@ class Algorithm(ABC):
         :return: RoutingStatus enumeration
         """
         pass
+
+    def create_path(self) -> RoutingStatus:
+        """
+        Traverses a list of nodes that compose the path's node_path and constructs a list of agent
+        tasks required to travel the path
+        :return:
+        """
+        if len(self.node_path) == 0:
+            return RoutingStatus.INVALID_PATH
+
+        while len(self.node_path) > 1:
+            # initialize the first path and direction
+            task_start_node = self.node_path.pop(0)
+            last_node = self.node_path[0]
+            if last_node.location[0] == task_start_node.location[0]:
+                task_direction = AgentCoordinates.X
+            elif last_node.location[1] == task_start_node.location[1]:
+                task_direction = AgentCoordinates.Y
+            else:
+                return RoutingStatus.INVALID_PATH
+
+            # traverse the nodes until we see a turn
+            nodes = list(self.node_path)
+            pop_count = 0
+            for next_node in nodes:
+                if task_direction == AgentCoordinates.X:
+                    if next_node.location[0] != last_node.location[0]:
+                        break
+                    else:
+                        last_node = next_node
+                else:
+                    if next_node.location[1] != last_node.location[1]:
+                        break
+                    else:
+                        last_node = next_node
+                pop_count += 1
+
+            # pop everything up until the turn (current last index - 1)
+            while pop_count > 1:
+                self.node_path.pop(0)
+                pop_count -= 1
+
+            # create the task and add it to the path list
+            if task_direction == AgentCoordinates.X:
+                move_distance = last_node.location[1] - task_start_node.location[1]
+            else:
+                move_distance = last_node.location[0] - task_start_node.location[0]
+            self.path.append(AgentTask(AgentTasks.MOVE, [task_direction, move_distance]))
+        return RoutingStatus.SUCCESS

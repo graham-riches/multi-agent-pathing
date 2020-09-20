@@ -46,6 +46,7 @@ class TestAgentMotionProfile(unittest.TestCase):
         # uncomment to view the motion profile
         # self.motion_profile.plot_profile()
 
+    @unittest.skip('Requires manual run')
     def test_special_case(self):
         self.motion_profile.acceleration = 6
         self.motion_profile.deceleration = 6

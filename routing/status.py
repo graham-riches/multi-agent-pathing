@@ -13,3 +13,4 @@ class RoutingStatus(Enum):
     SUCCESS = 0
     TARGET_BLOCKED = 1
     TARGET_RESERVED = 2
+    INVALID_PATH = 3
