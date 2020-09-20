@@ -151,6 +151,5 @@ class TestAStar(unittest.TestCase):
                           AgentCoordinates.X, AgentCoordinates.Y, AgentCoordinates.X, AgentCoordinates.Y]
         task_distance = [1, 1, 1, 1, 1, 1, 1, 1]
         for idx, task in enumerate(self.a_star.path):
-            print(task.args[0], task.args[1])
             self.assertEqual(task_direction[idx], task.args[0])
             self.assertEqual(task_distance[idx], task.args[1])

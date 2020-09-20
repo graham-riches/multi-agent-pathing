@@ -121,7 +121,6 @@ class Renderer:
             if agent.location.X == x_ind and agent.location.Y == y_ind:
                 found_agent = True
                 self.agent_selected = idx
-                print(self.agent_selected)
 
         if not found_agent:
             if self.agent_selected is not None:
