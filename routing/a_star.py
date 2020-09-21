@@ -179,7 +179,7 @@ class AStar(Algorithm):
         """
         x_distance = abs(target.location[0] - node.location[0])
         y_distance = abs(target.location[1] - node.location[1])
-        return x_distance**2 + y_distance**2
+        return x_distance + y_distance
 
     def calculate_turn_cost(self, node: Node) -> float:
         """
@@ -196,9 +196,7 @@ class AStar(Algorithm):
         else:
             direction = AgentCoordinates.Y
 
-        while parent != self.start:
-            current_node = parent
-            parent = parent.parent
+        while parent is not None:
             if current_node.location[1] == parent.location[1]:
                 new_direction = AgentCoordinates.X
             else:
@@ -206,7 +204,9 @@ class AStar(Algorithm):
             if new_direction != direction:
                 direction = new_direction
                 turns += 1
-        return turns * (1 + self._turn_factor)
+            current_node = parent
+            parent = parent.parent
+        return turns * self._turn_factor
 
     def construct_node_path(self, target_node: Node) -> list:
         """

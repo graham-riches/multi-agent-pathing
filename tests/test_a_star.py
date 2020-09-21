@@ -103,6 +103,7 @@ class TestAStar(unittest.TestCase):
         heuristic = self.a_star.calculate_heuristic_cost(start_node, target_node)
         self.assertEqual(18, heuristic)
 
+    @unittest.skip('debug')
     def test_routing_simple_path(self):
         target = (4, 4)
         status = self.a_star.route(self.agents[0], target)
@@ -151,3 +152,13 @@ class TestAStar(unittest.TestCase):
     def test_route_to_tile_with_other_agent_fails(self):
         status = self.a_star.check_target_location(1, 1)
         self.assertEqual(RoutingStatus.TARGET_RESERVED, status)
+
+    def test_calculate_turn_cost(self):
+        start_node = Node((0, 0))
+        node_1 = Node((1, 0), parent=start_node)
+        node_2 = Node((2, 0), parent=node_1)
+        node_3 = Node((2, 1), parent=node_2)
+        node_4 = Node((2, 2), parent=node_3)
+        node_5 = Node((3, 2), parent=node_4)
+        turn_cost = self.a_star.calculate_turn_cost(node_5)
+        self.assertEqual(2, turn_cost)
