@@ -1,0 +1,153 @@
+{
+	"simulation_properties": {
+		"timestep": 0.005,
+		"grid_dpi": 40,
+		"render": true
+	},
+	"arena_properties": {
+		"size": [10, 10],
+    "blockages": [ [3, 3] ]
+	},
+	"agents": [{
+			"id": 0,
+			"location": [0, 0],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 1,
+			"location": [0, 1],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 2,
+			"location": [0, 2],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 3,
+			"location": [0, 3],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 4,
+			"location": [0, 4],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 5,
+			"location": [0, 5],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 6,
+			"location": [0, 6],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 7,
+			"location": [0, 7],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 8,
+			"location": [0, 8],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 9,
+			"location": [0, 9],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		}
+	],
+	"tasks": [{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 0,
+				"location": [9, 9]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 1,
+				"location": [9, 8]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 2,
+				"location": [9, 7]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 3,
+				"location": [9, 6]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 4,
+				"location": [9, 5]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 5,
+				"location": [9, 4]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 6,
+				"location": [9, 3]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 7,
+				"location": [9, 2]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 8,
+				"location": [9, 1]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 9,
+				"location": [9, 0]
+			}
+		}
+	]
+}

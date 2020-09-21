@@ -96,7 +96,7 @@ class RoutingManager:
         # call the callback
         self.agent_callbacks[event](agent_id)
 
-    def route(self, agent_id: int, x_location: int, y_location: int) -> None:
+    def route(self, agent_id: int, x_location: int, y_location: int) -> RoutingStatus:
         """
         Route an agent to a new location given by (x_location, y_location)
         :param agent_id: the agent ID
@@ -110,3 +110,4 @@ class RoutingManager:
             # add all the agent tasks
             for task in self.algorithm.path:
                 self.add_agent_task(agent_id, task)
+        return status
