@@ -38,6 +38,7 @@ sim_agents.append(sim_agent_1)
 
 # setup the routing algorithm
 algorithm = AStar(sim_arena, sim_agents)
+algorithm.turn_factor = 4
 
 # create a routing manager and use it to queue some tasks for our agent
 routing_manager = RoutingManager(sim_arena, sim_agents, algorithm)

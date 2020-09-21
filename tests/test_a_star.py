@@ -95,19 +95,13 @@ class TestAStar(unittest.TestCase):
             node_exists = test_node in new_nodes
             self.assertTrue(node_exists)
 
-    def test_new_node_with_parent_has_a_higher_cost(self):
-        start = (1, 1)
-        start_node = Node(start)
-        new_node = Node((2, 1), parent=start_node)
-        self.assertEqual(1, new_node.travelled_cost)
-
     def test_calculate_heuristic(self):
         start = (1, 1)
         target = (4, 4)
         start_node = Node(start)
         target_node = Node(target)
-        start_node.calculate_heuristic(target_node)
-        self.assertEqual(18, start_node.heuristic_cost)
+        heuristic = self.a_star.calculate_heuristic_cost(start_node, target_node)
+        self.assertEqual(18, heuristic)
 
     def test_routing_simple_path(self):
         target = (4, 4)
@@ -153,3 +147,7 @@ class TestAStar(unittest.TestCase):
         for idx, task in enumerate(self.a_star.path):
             self.assertEqual(task_direction[idx], task.args[0])
             self.assertEqual(task_distance[idx], task.args[1])
+
+    def test_route_to_tile_with_other_agent_fails(self):
+        status = self.a_star.check_target_location(1, 1)
+        self.assertEqual(RoutingStatus.TARGET_RESERVED, status)

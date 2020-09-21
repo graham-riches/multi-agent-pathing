@@ -10,7 +10,7 @@
 """
 import numpy as np
 from arena import Arena
-from agent import Agent
+from agent import Agent, AgentCoordinates
 from routing.routing_algorithm import Algorithm
 from routing.status import RoutingStatus
 from tile import TileState
@@ -31,25 +31,43 @@ class Node:
         self.parent = parent
         # store the value of any algorithm weights. Note: the travelled cost is directly related to the parent node
         self.total_cost = 0
-        self.travelled_cost = 0 if parent is None else parent.travelled_cost + 1
-        self.heuristic_cost = 0
+        self._travelled_cost = 0
+        self._heuristic_cost = 0
+        self._turn_cost = 0
 
-    def calculate_heuristic(self, target) -> None:
-        """
-        calculate the routing heuristic value for a node
-        :param target: the target routing node
-        :return: None
-        """
-        x_distance = abs(target.location[0] - self.location[0])
-        y_distance = abs(target.location[1] - self.location[1])
-        self.heuristic_cost = x_distance**2 + y_distance**2
+    @property
+    def travelled_cost(self) -> float:
+        return self._travelled_cost
+
+    @travelled_cost.setter
+    def travelled_cost(self, cost: float) -> None:
+        self._travelled_cost = cost
+        self.calculate_total_cost()
+
+    @property
+    def heuristic_cost(self) -> float:
+        return self._heuristic_cost
+
+    @heuristic_cost.setter
+    def heuristic_cost(self, cost: float) -> None:
+        self._heuristic_cost = cost
+        self.calculate_total_cost()
+
+    @property
+    def turn_cost(self) -> float:
+        return self._turn_cost
+
+    @turn_cost.setter
+    def turn_cost(self, cost: float) -> None:
+        self._turn_cost = cost
+        self.calculate_total_cost()
 
     def calculate_total_cost(self) -> None:
         """
         Calculate the total routing cost for a node
         :return:
         """
-        self.total_cost = self.heuristic_cost + self.travelled_cost
+        self.total_cost = self._heuristic_cost + self._travelled_cost + self._turn_cost
 
     def __eq__(self, other) -> bool:
         """
@@ -74,7 +92,16 @@ class AStar(Algorithm):
         self.start = None
         self.target = None
         self.came_from = None
+        self._turn_factor = 0
         self.reset()
+
+    @property
+    def turn_factor(self) -> float:
+        return self._turn_factor
+
+    @turn_factor.setter
+    def turn_factor(self, factor: float) -> None:
+        self._turn_factor = factor
 
     def reset(self) -> None:
         """
@@ -116,22 +143,21 @@ class AStar(Algorithm):
         # run the pathing algorithm to completion
         while len(open_set) > 0:
             # get the node with the lowest total score for the next iteration
-            # TODO replace this with a sorted queue instead of two list operations
             node_scores = [node.total_cost for node in open_set]
             index = np.argmin(node_scores)
             current_node = open_set.pop(int(index))
             # check if the current node is equal to the target and return if true
             if current_node == self.target:
                 status = RoutingStatus.SUCCESS
-                self.construct_node_path()
+                self.node_path = self.construct_node_path(self.target)
                 self.create_path()
                 break
 
             neighbours = self.generate_new_nodes(current_node)
             for neighbour in neighbours:
                 # calculate the node costs
-                neighbour.calculate_heuristic(self.target)
-                neighbour.calculate_total_cost()
+                neighbour.heuristic_cost = self.calculate_heuristic_cost(neighbour, self.target)
+                neighbour.turn_cost = self.calculate_turn_cost(neighbour)
                 # if the came from at this location is empty, the current path is guaranteed to be the most optimal
                 # path found so far
                 came_from_node = self.came_from[int(neighbour.location[0])][int(neighbour.location[1])]
@@ -143,22 +169,64 @@ class AStar(Algorithm):
                         open_set.append(neighbour)
         return status
 
-    def construct_node_path(self) -> None:
+    @staticmethod
+    def calculate_heuristic_cost(node: Node, target: Node) -> float:
+        """
+        calculate the routing heuristic value for a node
+        :param node: the node to calculate the heuristic for
+        :param target: the target routing node
+        :return: None
+        """
+        x_distance = abs(target.location[0] - node.location[0])
+        y_distance = abs(target.location[1] - node.location[1])
+        return x_distance**2 + y_distance**2
+
+    def calculate_turn_cost(self, node: Node) -> float:
+        """
+        Calculate the transition penalty for a route candidate
+        :param node: The node to route to
+        :return: turn penalty
+        """
+        parent = node.parent
+        current_node = node
+        turns = 0
+
+        if current_node.location[1] == parent.location[1]:
+            direction = AgentCoordinates.X
+        else:
+            direction = AgentCoordinates.Y
+
+        while parent != self.start:
+            current_node = parent
+            parent = parent.parent
+            if current_node.location[1] == parent.location[1]:
+                new_direction = AgentCoordinates.X
+            else:
+                new_direction = AgentCoordinates.Y
+            if new_direction != direction:
+                direction = new_direction
+                turns += 1
+        return turns * (1 + self._turn_factor)
+
+    def construct_node_path(self, target_node: Node) -> list:
         """
         Reconstruct the routing path from target to start by connecting the nodes that the algorithm found as
         part of the path
         :return:
         """
-        # append the target node to the node path
-        self.node_path.append(self.target)
+        nodes = list()
+        # append the target_node node to the node path
+        nodes.append(target_node)
         previous_node = self.came_from[self.target.location[0]][self.target.location[1]]
-        while previous_node is not self.start:
-            self.node_path.append(previous_node)
-            previous_node = self.came_from[int(previous_node.location[0])][int(previous_node.location[1])]
+        if previous_node is not None:
+            while previous_node is not self.start:
+                nodes.append(previous_node)
+                previous_node = self.came_from[int(previous_node.location[0])][int(previous_node.location[1])]
         # append the start node
-        self.node_path.append(self.start)
+        nodes.append(self.start)
         # reverse the list so that it goes start to end
-        self.node_path.reverse()
+        nodes.reverse()
+        return nodes
 
     def generate_new_nodes(self, parent: Node) -> list:
         """
@@ -170,10 +238,15 @@ class AStar(Algorithm):
         new_nodes = list()
         # get the neighbour tiles from the arena object
         neighbours = self.arena.get_neighbours(parent.location[0], parent.location[1])
+        agent_locations = [(agent.location.X, agent.location.Y) for agent in self.agents]
         for neighbour in neighbours:
+            # create a node
+            new_node = Node(neighbour, parent=parent)
+            new_node.travelled_cost = parent.travelled_cost + 1
             # if the tile is free, add it to the set
-            if self.arena.get_tile_state(neighbour[0], neighbour[1]) == TileState.FREE:
-                new_nodes.append(Node(neighbour, parent=parent))
+            tile_state = self.arena.get_tile_state(neighbour[0], neighbour[1])
+            if tile_state == TileState.FREE and neighbour not in agent_locations:
+                new_nodes.append(new_node)
         return new_nodes
 
     def initialize_nodes(self, agent: Agent, target: tuple) -> None:
@@ -193,6 +266,11 @@ class AStar(Algorithm):
         :param y: the y coordinate of the target
         :return:
         """
+        # check for other agents at that location
+        agent_locations = [(agent.location.X, agent.location.Y) for agent in self.agents]
+        if (x, y) in agent_locations:
+            return RoutingStatus.TARGET_RESERVED
+
         tile_state = self.arena.get_tile_state(x, y)
         if tile_state == TileState.BLOCKED:
             return RoutingStatus.TARGET_BLOCKED

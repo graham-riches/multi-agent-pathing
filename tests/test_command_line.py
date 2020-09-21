@@ -8,6 +8,7 @@
 import unittest
 from command_line import CommandLine
 from routing.routing_manager import RoutingManager
+from routing.a_star import AStar
 from tile import TileState
 from agent import Agent
 from arena import Arena
@@ -18,7 +19,8 @@ class TestCommandLine(unittest.TestCase):
         time_step = 0.05
         self.agents = [Agent(0, 0, time_step)]
         self.arena = Arena(10, 20)
-        self.manager = RoutingManager(self.arena, self.agents)
+        self.algorithm = AStar(self.arena, self.agents)
+        self.manager = RoutingManager(self.arena, self.agents, self.algorithm)
         self.cli = CommandLine(self.arena, self.agents, self.manager)
 
     def test_help(self):
