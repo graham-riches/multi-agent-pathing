@@ -13,11 +13,12 @@ from agent import *
 from routing.status import RoutingStatus
 
 
-class Algorithm(ABC):
+class SingleAgentAlgorithm(ABC):
     @abstractmethod
     def __init__(self, arena: Arena, agents: list) -> None:
         """
-        Initialize a routing algorithm with the Arena and a list of agents
+        Initialize a routing algorithm with the Arena and a list of agents. This finds an "optimal" path to
+        a goal for a single agent using whatever means the child classes chooses.
         :param arena: the arena for the simulation
         :param agents: the list of all simulation agents
         """
@@ -93,3 +94,25 @@ class Algorithm(ABC):
                 move_distance = last_node.location[1] - task_start_node.location[1]
             self.path.append(AgentTask(AgentTasks.MOVE, [task_direction, move_distance]))
         return RoutingStatus.SUCCESS
+
+
+class MultiAgentAlgorithm(ABC):
+    @abstractmethod
+    def __init__(self, arena: Arena, agents: list) -> None:
+        """
+        Creates a multi-agent routing algorithm. This manages routing a group of agents towards a goal.
+        :param arena:
+        :param agents:
+        """
+        self.arena = arena  # the arena object
+        self.agents = agents  # list of agents
+        self.agent_goals = [None for agent in self.agents]  # goal location for each agent
+
+    def set_agent_goal(self, agent_id: int, location: tuple) -> None:
+        """
+        set the goal location for an agent. The algorithm will continually route to here until 'Done'
+        :param agent_id: the id of the agent
+        :param location: the target/goal location
+        :return: None
+        """
+        self.agent_goals[agent_id] = location

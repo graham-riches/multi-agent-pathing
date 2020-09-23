@@ -8,7 +8,7 @@
 from enum import Enum
 from arena import Arena
 from agent import *
-from routing.routing_algorithm import Algorithm
+from routing.routing_algorithm import SingleAgentAlgorithm
 from routing.status import RoutingStatus
 
 
@@ -17,7 +17,7 @@ class AgentEvent(Enum):
 
 
 class RoutingManager:
-    def __init__(self, arena: Arena, agents: list, algorithm: Algorithm) -> None:
+    def __init__(self, arena: Arena, agents: list, algorithm: SingleAgentAlgorithm) -> None:
         """
         Start a routing manager object
         :param arena: the simulation arena

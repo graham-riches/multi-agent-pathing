@@ -8,7 +8,7 @@
 """
 import json
 import time
-from routing.routing_algorithm import Algorithm
+from routing.routing_algorithm import SingleAgentAlgorithm
 from render_engine import Renderer
 from routing.routing_manager import RoutingManager, AgentEvent
 from routing.status import RoutingStatus
@@ -38,7 +38,7 @@ class BenchmarkRunner:
         self.arena = None
         self.tasks = None
 
-    def set_algorithm(self, algorithm: Algorithm) -> None:
+    def set_algorithm(self, algorithm: SingleAgentAlgorithm) -> None:
         """
         Set the pathing algorithm for the benchmark simulation. This is the final simulation dependency, so create
         the remaining objects that depend on this as well.
@@ -136,7 +136,6 @@ class BenchmarkRunner:
                     agent_id = parameters['agent_id']
                     location = parameters['location']
                     status = self.routing_manager.route(agent_id, location[0], location[1])
-                    print(status)
                     # pop the task if the route was successful, otherwise try again another cycle
                     if status == RoutingStatus.SUCCESS:
                         self.tasks.pop(idx)

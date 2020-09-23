@@ -11,7 +11,7 @@
 import numpy as np
 from arena import Arena
 from agent import Agent, AgentCoordinates
-from routing.routing_algorithm import Algorithm
+from routing.routing_algorithm import SingleAgentAlgorithm
 from routing.status import RoutingStatus
 from tile import TileState
 
@@ -77,7 +77,7 @@ class Node:
         return self.location == other.location
 
 
-class AStar(Algorithm):
+class AStar(SingleAgentAlgorithm):
     def __init__(self, arena: Arena, agents: list) -> None:
         """
         Initialize an A* search object given a particular arena and a list of agents. Agent locations are considered
