@@ -8,7 +8,7 @@
 import unittest
 from arena import Arena
 from agent import *
-from routing.a_star import AStar, Node
+from routing.a_star import AStar, AStarNode
 from routing.status import RoutingStatus
 
 
@@ -47,8 +47,8 @@ class TestAStar(unittest.TestCase):
     def test_initialize_nodes(self):
         start = (0, 0)
         target = (0, 4)
-        start_node = Node(start)
-        end_node = Node(target)
+        start_node = AStarNode(start)
+        end_node = AStarNode(target)
         self.a_star.initialize_nodes(self.agents[0], target)
         start_eq = start_node == self.a_star.start
         end_eq = end_node == self.a_star.target
@@ -59,12 +59,12 @@ class TestAStar(unittest.TestCase):
         # initialize the search, and then get neighbouring tiles
         start = (1, 1)
         expected_neighbours = [(2, 1), (1, 2), (0, 1), (1, 0)]
-        parent_node = Node(start)
+        parent_node = AStarNode(start)
         new_nodes = self.a_star.generate_new_nodes(parent_node)
         self.assertEqual(len(expected_neighbours), len(new_nodes))
         # make sure all of the correct nodes are returned
         for node_location in expected_neighbours:
-            test_node = Node(node_location)
+            test_node = AStarNode(node_location)
             node_exists = test_node in new_nodes
             self.assertTrue(node_exists)
 
@@ -72,12 +72,12 @@ class TestAStar(unittest.TestCase):
         # initialize the search in a corner, and then get neighbouring tiles
         start = (0, 0)
         expected_neighbours = [(0, 1), (1, 0)]
-        parent_node = Node(start)
+        parent_node = AStarNode(start)
         new_nodes = self.a_star.generate_new_nodes(parent_node)
         self.assertEqual(len(expected_neighbours), len(new_nodes))
         # make sure all of the correct nodes are returned
         for node_location in expected_neighbours:
-            test_node = Node(node_location)
+            test_node = AStarNode(node_location)
             node_exists = test_node in new_nodes
             self.assertTrue(node_exists)
 
@@ -86,22 +86,22 @@ class TestAStar(unittest.TestCase):
         start = (1, 1)
         self.arena.set_blockage([2], [0, 1, 2, 3])
         expected_neighbours = [(1, 2), (0, 1), (1, 0)]
-        parent_node = Node(start)
+        parent_node = AStarNode(start)
         new_nodes = self.a_star.generate_new_nodes(parent_node)
         self.assertEqual(len(expected_neighbours), len(new_nodes))
         # make sure all of the correct nodes are returned
         for node_location in expected_neighbours:
-            test_node = Node(node_location)
+            test_node = AStarNode(node_location)
             node_exists = test_node in new_nodes
             self.assertTrue(node_exists)
 
     def test_calculate_heuristic(self):
         start = (1, 1)
         target = (4, 4)
-        start_node = Node(start)
-        target_node = Node(target)
+        start_node = AStarNode(start)
+        target_node = AStarNode(target)
         heuristic = self.a_star.calculate_heuristic_cost(start_node, target_node)
-        self.assertEqual(18, heuristic)
+        self.assertEqual(6, heuristic)
 
     @unittest.skip('debug')
     def test_routing_simple_path(self):
@@ -111,54 +111,27 @@ class TestAStar(unittest.TestCase):
         # make sure the final nodes are correct
         self.assertTupleEqual((4, 4), self.a_star.node_path[-1].location)
 
-    def test_reconstruct_empty_path_is_invalid(self):
-        self.a_star.node_path = list()
-        status = self.a_star.create_path()
-        self.assertEqual(RoutingStatus.INVALID_PATH, status)
-
-    def test_diagonal_path_is_invalid(self):
-        self.a_star.node_path = [Node((0, 0)), Node((1, 1))]
-        status = self.a_star.create_path()
-        self.assertEqual(RoutingStatus.INVALID_PATH, status)
-
-    def test_reconstruct_path(self):
-        # force a list of nodes to be the node path
-        self.a_star.node_path = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((1, 2)), Node((2, 2))]
-        status = self.a_star.create_path()
-        self.assertEqual(RoutingStatus.SUCCESS, status)
-        # The order of the tasks should be: Move X 2, Move Y 2
-        task_direction = [AgentCoordinates.Y, AgentCoordinates.X]
-        task_distance = [2, 2]
-        for idx, task in enumerate(self.a_star.path):
-            self.assertEqual(task_direction[idx], task.args[0])
-            self.assertEqual(task_distance[idx], task.args[1])
-
-    def test_reconstruct_path_zig_zag(self):
-        # force a list of nodes to be the node path
-        self.a_star.node_path = [Node((0, 0)), Node((1, 0)), Node((1, 1)), Node((2, 1)), Node((2, 2)),
-                                 Node((3, 2)), Node((3, 3)), Node((4, 3)), Node((4, 4))]
-        status = self.a_star.create_path()
-        self.assertEqual(RoutingStatus.SUCCESS, status)
-        # this path should contain 8 tasks
-        self.assertEqual(8, len(self.a_star.path))
-        # The order of the tasks should be: Move X 1, Move Y 1, Move X 1, Move Y 1
-        task_direction = [AgentCoordinates.X, AgentCoordinates.Y, AgentCoordinates.X, AgentCoordinates.Y,
-                          AgentCoordinates.X, AgentCoordinates.Y, AgentCoordinates.X, AgentCoordinates.Y]
-        task_distance = [1, 1, 1, 1, 1, 1, 1, 1]
-        for idx, task in enumerate(self.a_star.path):
-            self.assertEqual(task_direction[idx], task.args[0])
-            self.assertEqual(task_distance[idx], task.args[1])
-
     def test_route_to_tile_with_other_agent_fails(self):
         status = self.a_star.check_target_location(1, 1)
         self.assertEqual(RoutingStatus.TARGET_RESERVED, status)
 
-    def test_calculate_turn_cost(self):
-        start_node = Node((0, 0))
-        node_1 = Node((1, 0), parent=start_node)
-        node_2 = Node((2, 0), parent=node_1)
-        node_3 = Node((2, 1), parent=node_2)
-        node_4 = Node((2, 2), parent=node_3)
-        node_5 = Node((3, 2), parent=node_4)
+    def test_calculate_turn_cost_no_factor(self):
+        start_node = AStarNode((0, 0))
+        node_1 = AStarNode((1, 0), parent=start_node)
+        node_2 = AStarNode((2, 0), parent=node_1)
+        node_3 = AStarNode((2, 1), parent=node_2)
+        node_4 = AStarNode((2, 2), parent=node_3)
+        node_5 = AStarNode((3, 2), parent=node_4)
+        turn_cost = self.a_star.calculate_turn_cost(node_5)
+        self.assertEqual(0, turn_cost)
+
+    def test_calculate_turn_cost_with_weight(self):
+        start_node = AStarNode((0, 0))
+        self.a_star.turn_factor = 1
+        node_1 = AStarNode((1, 0), parent=start_node)
+        node_2 = AStarNode((2, 0), parent=node_1)
+        node_3 = AStarNode((2, 1), parent=node_2)
+        node_4 = AStarNode((2, 2), parent=node_3)
+        node_5 = AStarNode((3, 2), parent=node_4)
         turn_cost = self.a_star.calculate_turn_cost(node_5)
         self.assertEqual(2, turn_cost)

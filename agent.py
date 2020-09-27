@@ -29,6 +29,10 @@ class AgentTasks(Enum):
     UPDATE_MOTION_PARAMETERS = 1
 
 
+class AgentEvent(Enum):
+    TASK_COMPLETED = 1
+
+
 class AgentTask:
     def __init__(self, task_id: AgentTasks, args: list) -> None:
         """

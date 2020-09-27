@@ -2,7 +2,7 @@
 	"simulation_properties": {
 		"timestep": 0.005,
 		"grid_dpi": 40,
-		"render": false
+		"render": true
 	},
 	"arena_properties": {
 		"size": [10, 10],

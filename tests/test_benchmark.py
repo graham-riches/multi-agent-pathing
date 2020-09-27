@@ -7,9 +7,8 @@
    
 """
 import unittest
-from unittest import TestCase
 
-from benchmarks.benchmark import BenchmarkRunner, BenchmarkRunner
+from benchmarks.benchmark import BenchmarkRunner
 from tile import TileState
 
 
@@ -47,4 +46,8 @@ class TestBenchmarkLoader(unittest.TestCase):
         self.loader.parse_tasks()
         self.assertEqual(10, len(self.loader.tasks))
 
+    def test_no_algorithms_returns_zero(self):
+        cycles = self.loader.run()
+        self.assertEqual(0, cycles)
 
+s

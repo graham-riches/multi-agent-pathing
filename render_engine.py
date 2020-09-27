@@ -10,7 +10,7 @@ import pygame
 from arena import Arena
 from agent import Agent
 from tile import TileState
-from routing.routing_manager import RoutingManager
+from routing.routing_algorithm import MultiAgentAlgorithm
 
 
 # pygame buttons
@@ -19,7 +19,7 @@ RIGHT = 3
 
 
 class Renderer:
-    def __init__(self, arena: Arena, agents: list, routing_manager: RoutingManager,
+    def __init__(self, arena: Arena, agents: list, routing_manager: MultiAgentAlgorithm,
                  timestep: float, dpi_scaling: int = 40) -> None:
         """
         Create a new canvas for rendering the simulation. The base canvas is based on an Arena object,

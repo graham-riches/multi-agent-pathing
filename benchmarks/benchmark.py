@@ -8,9 +8,8 @@
 """
 import json
 import time
-from routing.routing_algorithm import SingleAgentAlgorithm
+from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm
 from render_engine import Renderer
-from routing.routing_manager import RoutingManager, AgentEvent
 from routing.status import RoutingStatus
 from routing.a_star import AStar
 from agent import *
@@ -28,27 +27,32 @@ class BenchmarkRunner:
             self.config = json.load(jsonfile)
 
         # Benchmark simulation properties
+        self._routing_algorithm = None
+        self._manager_algorithm = None
         self.time_step = None
         self.dpi = None
         self.render = False
         self.renderer = None
-        self.algorithm = None
         self.routing_manager = None
         self.agents = None
         self.arena = None
         self.tasks = None
 
-    def set_algorithm(self, algorithm: SingleAgentAlgorithm) -> None:
-        """
-        Set the pathing algorithm for the benchmark simulation. This is the final simulation dependency, so create
-        the remaining objects that depend on this as well.
-        :param algorithm: the algorithm object
-        :return: None
-        """
-        self.algorithm = algorithm
-        self.routing_manager = RoutingManager(self.arena, self.agents, self.algorithm)
-        if self.render:
-            self.renderer = Renderer(self.arena, self.agents, self.routing_manager, self.time_step, self.dpi)
+    @property
+    def algorithm(self) -> SingleAgentAlgorithm:
+        return self._routing_algorithm
+
+    @algorithm.setter
+    def algorithm(self, algorithm: SingleAgentAlgorithm) -> None:
+        self._routing_algorithm = algorithm
+
+    @property
+    def routing_manager(self) -> MultiAgentAlgorithm:
+        return self._manager_algorithm
+
+    @routing_manager.setter
+    def routing_manager(self, manager: MultiAgentAlgorithm) -> None:
+        self._manager_algorithm = managers
 
     def parse_simulation_properties(self) -> None:
         """
@@ -109,6 +113,9 @@ class BenchmarkRunner:
         self.parse_arena()
         self.parse_agents()
         self.parse_tasks()
+        # create the renderer if required
+        if self.render:
+            self.renderer = Renderer(self.arena, self.agents, self.routing_manager, self.time_step, self.dpi)
 
     def render_simulation(self) -> None:
         """
@@ -121,41 +128,36 @@ class BenchmarkRunner:
                 self.renderer.render_agent(agent_id)
             self.renderer.update()
 
-    def run_simulation(self) -> int:
+    def run(self) -> int:
         """
         run the simulation and render it if requested.
         :return:  the number of cycles to complete
         """
         cycles = 0
-        while len(self.tasks) > 0:
-            cycles += 1
-            # attempt to start the tasks
-            for idx, task in enumerate(self.tasks):
-                if task['task_id'] == 'route':
-                    parameters = task['task_parameters']
-                    agent_id = parameters['agent_id']
-                    location = parameters['location']
-                    status = self.routing_manager.route(agent_id, location[0], location[1])
-                    # pop the task if the route was successful, otherwise try again another cycle
-                    if status == RoutingStatus.SUCCESS:
-                        self.tasks.pop(idx)
-            # update everything
-            for agent_id, agent in enumerate(self.agents):
-                state = agent.update()
-                if state == AgentState.IDLE:
-                    self.routing_manager.signal_agent_event(agent_id, AgentEvent.TASK_COMPLETED)
-            # render if required
+        if (self._manager_algorithm is None) and (self._routing_algorithm is None):
+            return cycles
+
+        # set the goal locations in the multi-agent algorithm
+        for task in self.tasks:
+            if task['task_id'] == 'route':
+                parameters = task['task_parameters']
+                self._manager_algorithm.set_agent_goal(parameters['agent_idx'], parameters['location'])
+
+        # run the simulation until complete
+        while not self._manager_algorithm.is_simulation_complete():
+            self._manager_algorithm.run()
             self.render_simulation()
+            cycles += 1
         return cycles
 
 
 if __name__ == '__main__':
     # load the configuration
-    runner = BenchmarkRunner('test_config.json')
+    runner = BenchmarkRunner('crossover.json')
     runner.load_configuration()
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
-    runner.set_algorithm(a_star)
-    run_cycles = runner.run_simulation()
+    runner.algorithm = a_star
+    run_cycles = runner.run()
     print(run_cycles)
 

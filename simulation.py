@@ -8,7 +8,6 @@
 import threading
 from render_engine import Renderer
 from command_line import CommandLine
-from routing.routing_manager import *
 from routing.a_star import AStar
 from agent import *
 from arena import Arena
@@ -18,8 +17,8 @@ BASE_DPI = 40
 
 
 # CLI thread
-def cli_thread_func(arena: Arena, agents: list, manager: RoutingManager) -> None:
-    cli = CommandLine(arena, agents, manager)
+def cli_thread_func(arena: Arena, agents: list) -> None:
+    cli = CommandLine(arena, agents)
     while True:
         cli.get_input()
 
@@ -40,14 +39,11 @@ sim_agents.append(sim_agent_1)
 algorithm = AStar(sim_arena, sim_agents)
 algorithm.turn_factor = 2
 
-# create a routing manager and use it to queue some tasks for our agent
-routing_manager = RoutingManager(sim_arena, sim_agents, algorithm)
-
 # setup the renderer
 renderer = Renderer(sim_arena, sim_agents, routing_manager, BASE_TIME_STEP, BASE_DPI)
 
 # start the CLI thread
-cli_thread = threading.Thread(target=cli_thread_func, args=(sim_arena, sim_agents, routing_manager))
+cli_thread = threading.Thread(target=cli_thread_func, args=(sim_arena, sim_agents))
 cli_thread.start()
 
 

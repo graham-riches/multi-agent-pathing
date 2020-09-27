@@ -9,17 +9,15 @@
 
 from agent import Agent, AgentCoordinates
 from arena import Arena
-from routing.routing_manager import RoutingManager
 
 
 class CommandLine:
-    def __init__(self, arena: Arena, agents: list, routing_manager: RoutingManager) -> None:
+    def __init__(self, arena: Arena, agents: list) -> None:
         """
         Initialize a CLI with a list of agents, an arena, and a routing manager
         """
         self.arena = arena
         self.agents = agents
-        self.routing_manager = routing_manager
 
     def help(self, args: list) -> bool:
         """
@@ -81,20 +79,6 @@ class CommandLine:
         else:
             return False
         return True
-
-    def route(self, args: list) -> bool:
-        """
-        route an agent to a new location
-            Usage: route [agent_id] [x_location] [y_location]
-        """
-        if len(args) < 3:
-            self.help(['route'])
-            return False
-        id = int(args[0])
-        x = int(args[1])
-        y = int(args[2])
-        self.routing_manager.route(id, x, y)
-        print('Routing Agent {}: Target Location ({}, {})'.format(id, x, y))
 
     def parse_command(self, command: str) -> bool:
         """

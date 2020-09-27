@@ -11,24 +11,23 @@
 import numpy as np
 from arena import Arena
 from agent import Agent, AgentCoordinates
-from routing.routing_algorithm import SingleAgentAlgorithm
+from routing.routing_algorithm import SingleAgentAlgorithm, Node
 from routing.status import RoutingStatus
 from tile import TileState
 
 TRAVELLED_COST_INITIAL = 1000000
 
 
-class Node:
+class AStarNode(Node):
     def __init__(self, location: tuple, parent=None) -> None:
         """
         Generate a node at a specific location.
         :param location: the location tuple (x,y)
-        :param parent: A parent Node. Note, I would normally use typehints here, but typehints don't play well
-                       with self-references and using things like typings Optional to simulate C++ templates seems
-                       kind of pointless.
+        :param parent: A parent Node
         """
-        self.location = location
-        self.parent = parent
+        # initialize parent node class
+        super(AStarNode, self).__init__(location, parent)
+
         # store the value of any algorithm weights. Note: the travelled cost is directly related to the parent node
         self.total_cost = 0
         self._travelled_cost = 0
@@ -170,7 +169,7 @@ class AStar(SingleAgentAlgorithm):
         return status
 
     @staticmethod
-    def calculate_heuristic_cost(node: Node, target: Node) -> float:
+    def calculate_heuristic_cost(node: AStarNode, target: AStarNode) -> float:
         """
         calculate the routing heuristic value for a node
         :param node: the node to calculate the heuristic for
@@ -181,7 +180,7 @@ class AStar(SingleAgentAlgorithm):
         y_distance = abs(target.location[1] - node.location[1])
         return x_distance + y_distance
 
-    def calculate_turn_cost(self, node: Node) -> float:
+    def calculate_turn_cost(self, node: AStarNode) -> float:
         """
         Calculate the transition penalty for a route candidate
         :param node: The node to route to
@@ -208,7 +207,7 @@ class AStar(SingleAgentAlgorithm):
             parent = parent.parent
         return turns * self._turn_factor
 
-    def construct_node_path(self, target_node: Node) -> list:
+    def construct_node_path(self, target_node: AStarNode) -> list:
         """
         Reconstruct the routing path from target to start by connecting the nodes that the algorithm found as
         part of the path
@@ -228,7 +227,7 @@ class AStar(SingleAgentAlgorithm):
         nodes.reverse()
         return nodes
 
-    def generate_new_nodes(self, parent: Node) -> list:
+    def generate_new_nodes(self, parent: AStarNode) -> list:
         """
         Creates a list of new nodes that have a parent node. Note: each of these nodes has a
         travel cost equal to the parent node plus one
@@ -241,7 +240,7 @@ class AStar(SingleAgentAlgorithm):
         agent_locations = [(agent.location.X, agent.location.Y) for agent in self.agents]
         for neighbour in neighbours:
             # create a node
-            new_node = Node(neighbour, parent=parent)
+            new_node = AStarNode(neighbour, parent=parent)
             new_node.travelled_cost = parent.travelled_cost + 1
             # if the tile is free, add it to the set
             tile_state = self.arena.get_tile_state(neighbour[0], neighbour[1])
@@ -256,8 +255,8 @@ class AStar(SingleAgentAlgorithm):
         :param target: the target location tuple (x,y)
         :return: None
         """
-        self.start = Node((agent.location.X, agent.location.Y))
-        self.target = Node(target)
+        self.start = AStarNode((agent.location.X, agent.location.Y))
+        self.target = AStarNode(target)
 
     def check_target_location(self, x: int, y: int) -> RoutingStatus:
         """
