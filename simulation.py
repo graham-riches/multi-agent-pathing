@@ -53,8 +53,7 @@ cli_thread.start()
 
 while True:
     renderer.render_arena()
+    routing_manager.run_time_step()
     for agent_id, agent in enumerate(sim_agents):
-        state = agent.update()
-        routing_manager.run_time_step()
         renderer.render_agent(agent_id)
     renderer.update()

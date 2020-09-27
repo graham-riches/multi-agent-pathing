@@ -28,6 +28,7 @@ class Sequential(MultiAgentAlgorithm):
         """
         super(Sequential, self).__init__(arena, agents, algorithm)
         self.active_agents = [False for agent in self.agents]
+        self.initialized = [False for agent in self.agents]
 
     def run_time_step(self) -> None:
         """
@@ -36,19 +37,23 @@ class Sequential(MultiAgentAlgorithm):
         :return: None
         """
         for idx, agent in enumerate(self.agents):
-            if (agent.state == AgentState.IDLE) and (not self.is_agent_at_goal(idx)):
-                # signal that the last task completed
+            agent.update()
+            if agent.state == AgentState.IDLE:
+                # signal that the last task completed and route other agents
                 if self.active_agents[idx]:
                     self.signal_agent_event(idx, AgentEvent.TASK_COMPLETED)
                     self.active_agents[idx] = False
-                # check for any new tasks
-                if len(self.agent_tasks[idx]) > 0:
-                    new_task = self.agent_tasks[idx].pop(0)
-                    self.agents[idx].start_task(new_task)
-                    self.active_agents[idx] = True
-                else:
-                    # try to route the agent
-                    self.route(idx, self.agent_goals[idx])
+                    self.route_on_completion()
+                if not self.is_agent_at_goal(idx):
+                    # check if the agent is initialized and route accordingly
+                    if not self.initialized[idx]:
+                        self.route(idx, self.agent_goals[idx])
+                        self.initialized[idx] = True
+                    # check for any new tasks
+                    if len(self.agent_tasks[idx]) > 0:
+                        new_task = self.agent_tasks[idx].pop(0)
+                        self.agents[idx].start_task(new_task)
+                        self.active_agents[idx] = True
 
     def route(self, agent_id: int, target: tuple) -> None:
         """
@@ -69,5 +74,15 @@ class Sequential(MultiAgentAlgorithm):
             if route_status == RoutingStatus.SUCCESS:
                 for task in self.routing_algorithm.path:
                     self.add_agent_task(agent_id, task)
+
+    def route_on_completion(self) -> None:
+        """
+        Attempt to route other agents when an agent task completed event is received
+        :return:
+        """
+        for idx, agent in enumerate(self.agents):
+            if not self.is_agent_at_goal(idx):
+                self.route(idx, self.agent_goals[idx])
+
 
 

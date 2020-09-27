@@ -7,11 +7,10 @@
    
 """
 import json
-import time
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm
 from render_engine import Renderer
-from routing.status import RoutingStatus
 from routing.a_star import AStar
+from routing.managers.sequential import Sequential
 from agent import *
 from arena import Arena
 
@@ -52,7 +51,7 @@ class BenchmarkRunner:
 
     @routing_manager.setter
     def routing_manager(self, manager: MultiAgentAlgorithm) -> None:
-        self._manager_algorithm = managers
+        self._manager_algorithm = manager
 
     def parse_simulation_properties(self) -> None:
         """
@@ -141,11 +140,13 @@ class BenchmarkRunner:
         for task in self.tasks:
             if task['task_id'] == 'route':
                 parameters = task['task_parameters']
-                self._manager_algorithm.set_agent_goal(parameters['agent_idx'], parameters['location'])
+                target_location = parameters['location']
+                goal = (target_location[0], target_location[1])
+                self._manager_algorithm.set_agent_goal(parameters['agent_id'], goal)
 
         # run the simulation until complete
         while not self._manager_algorithm.is_simulation_complete():
-            self._manager_algorithm.run()
+            self._manager_algorithm.run_time_step()
             self.render_simulation()
             cycles += 1
         return cycles
@@ -158,6 +159,8 @@ if __name__ == '__main__':
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
     runner.algorithm = a_star
+    routing_manager = Sequential(runner.arena, runner.agents, runner.algorithm)
+    runner.routing_manager = routing_manager
     run_cycles = runner.run()
     print(run_cycles)
 

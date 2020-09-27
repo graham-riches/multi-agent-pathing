@@ -51,7 +51,8 @@ class Renderer:
 
         # dict of color keys
         self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'tile_reserved': (60, 60, 60),
-                            'grid_lines': (255, 255, 255), 'agent': (165, 255, 190), 'agent_selected': (245, 100, 90)}
+                            'grid_lines': (255, 255, 255), 'agent': (165, 255, 190), 'agent_selected': (245, 100, 90),
+                            'agent_border': (0, 0, 0)}
         self.total_elements = len(self.colors_dict)
 
     def render_arena(self) -> None:
@@ -89,6 +90,7 @@ class Renderer:
         rect_location = (x_pos, y_pos, self.dpi, self.dpi)
         color = self.colors_dict['agent_selected'] if agent_id == self.agent_selected else self.colors_dict['agent']
         pygame.draw.rect(self.screen, color, rect_location)
+        pygame.draw.rect(self.screen, self.colors_dict['agent_border'], rect_location, 1)
 
     def blockage_on_click(self, block: bool, x_index: int, y_index: int) -> None:
         """
