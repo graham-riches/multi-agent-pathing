@@ -9,11 +9,11 @@
     lowest cost path from end to start.
 """
 import numpy as np
-from arena import Arena
-from agent import Agent, AgentCoordinates
+from core.arena import Arena
+from core.agent import Agent, AgentCoordinates
 from routing.routing_algorithm import SingleAgentAlgorithm, Node
 from routing.status import RoutingStatus
-from tile import TileState
+from core.tile import TileState
 
 TRAVELLED_COST_INITIAL = 1000000
 

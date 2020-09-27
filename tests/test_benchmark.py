@@ -8,8 +8,8 @@
 """
 import unittest
 
-from benchmarks.benchmark import BenchmarkRunner
-from tile import TileState
+from core.benchmark import BenchmarkRunner
+from core.tile import TileState
 
 
 class TestBenchmarkLoader(unittest.TestCase):

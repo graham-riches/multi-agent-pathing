@@ -9,11 +9,12 @@
 import sys
 import json
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm
-from render_engine import Renderer
+from core.render_engine import Renderer
 from routing.a_star import AStar
 from routing.managers.sequential import Sequential
-from agent import *
-from arena import Arena
+from routing.managers.sequential_rerouting import SequentialRerouting
+from core.agent import *
+from core.arena import Arena
 
 
 class BenchmarkRunner:
@@ -164,7 +165,7 @@ if __name__ == '__main__':
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
     runner.algorithm = a_star
-    routing_manager = Sequential(runner.arena, runner.agents, runner.algorithm)
+    routing_manager = SequentialRerouting(runner.arena, runner.agents, runner.algorithm)
     runner.routing_manager = routing_manager
     run_cycles = runner.run()
     print(run_cycles)

@@ -7,9 +7,9 @@
    
 """
 import pygame
-from arena import Arena
-from agent import Agent
-from tile import TileState
+from core.agent_colors import COLORS
+from core.arena import Arena
+from core.tile import TileState
 from routing.routing_algorithm import MultiAgentAlgorithm
 
 
@@ -51,7 +51,7 @@ class Renderer:
 
         # dict of color keys
         self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'tile_reserved': (60, 60, 60),
-                            'grid_lines': (255, 255, 255), 'agent': (165, 255, 190), 'agent_selected': (245, 100, 90),
+                            'grid_lines': (255, 255, 255), 'agent': COLORS, 'agent_selected': (245, 100, 90),
                             'agent_border': (0, 0, 0)}
         self.total_elements = len(self.colors_dict)
 
@@ -88,7 +88,7 @@ class Renderer:
         y_pos = round(self.dpi * agent.location.Y)
         # draw the tile
         rect_location = (x_pos, y_pos, self.dpi, self.dpi)
-        color = self.colors_dict['agent_selected'] if agent_id == self.agent_selected else self.colors_dict['agent']
+        color = self.colors_dict['agent_selected'] if agent_id == self.agent_selected else self.colors_dict['agent'][agent_id]
         pygame.draw.rect(self.screen, color, rect_location)
         pygame.draw.rect(self.screen, self.colors_dict['agent_border'], rect_location, 1)
 

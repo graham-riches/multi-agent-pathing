@@ -6,12 +6,12 @@
    
 """
 import threading
-from render_engine import Renderer
-from command_line import CommandLine
+from core.render_engine import Renderer
+from core.command_line import CommandLine
 from routing.a_star import AStar
 from routing.managers.sequential import Sequential
-from agent import *
-from arena import Arena
+from core.agent import *
+from core.arena import Arena
 
 BASE_TIME_STEP = 0.05
 BASE_DPI = 40

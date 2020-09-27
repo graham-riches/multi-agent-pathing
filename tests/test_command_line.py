@@ -6,11 +6,11 @@
    
 """
 import unittest
-from command_line import CommandLine
+from core.command_line import CommandLine
 from routing.a_star import AStar
-from tile import TileState
-from agent import Agent
-from arena import Arena
+from core.tile import TileState
+from core.agent import Agent
+from core.arena import Arena
 
 
 class TestCommandLine(unittest.TestCase):

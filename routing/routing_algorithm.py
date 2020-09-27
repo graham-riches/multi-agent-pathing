@@ -8,8 +8,8 @@
 """
 
 from abc import ABC, abstractmethod
-from arena import Arena
-from agent import *
+from core.arena import Arena
+from core.agent import *
 from routing.status import RoutingStatus
 
 

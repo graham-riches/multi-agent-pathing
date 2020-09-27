@@ -7,8 +7,8 @@
     Note: the name of the method is the command line argument required to trigger the function.
 """
 
-from agent import Agent, AgentCoordinates
-from arena import Arena
+from core.agent import AgentCoordinates
+from core.arena import Arena
 
 
 class CommandLine:

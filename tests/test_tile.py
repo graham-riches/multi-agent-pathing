@@ -1,6 +1,6 @@
 from unittest import TestCase
-from tile import Tile
-from tile import TileState
+from core.tile import Tile
+from core.tile import TileState
 
 
 class TestTile(TestCase):

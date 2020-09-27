@@ -6,8 +6,8 @@
    
 """
 import unittest
-from agent import *
-from agent_exceptions import MotionError
+from core.agent import *
+from core.agent_exceptions import MotionError
 
 BASE_TIME_STEP = 0.005
 

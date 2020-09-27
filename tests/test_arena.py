@@ -6,8 +6,8 @@
    
 """
 import unittest
-from arena import Arena
-from tile import TileState
+from core.arena import Arena
+from core.tile import TileState
 
 
 class TestArena(unittest.TestCase):

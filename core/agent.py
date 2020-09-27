@@ -11,7 +11,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
-from agent_exceptions import MotionError
+from core.agent_exceptions import MotionError
 
 
 class AgentCoordinates(Enum):
@@ -252,6 +252,8 @@ class Agent:
         self.location = AgentLocation(x_position, y_position)
         self.state = AgentState.IDLE
         # private
+        self._last_location = (x_position, y_position)
+        self._location_updated = False
         self._time_step = simulation_time_step
         self._movement_steps = None
         self._current_time_step = 0
@@ -260,6 +262,15 @@ class Agent:
         # function callbacks for task handling
         self._callbacks = {AgentTasks.MOVE: self.start_move,
                            AgentTasks.UPDATE_MOTION_PARAMETERS: self.set_kinematic_parameters}
+
+    @property
+    def last_square_position(self) -> tuple:
+        self._location_updated = False
+        self._last_location = (int(self.location.X), int(self.location.Y))
+        return self._last_location
+
+    def is_location_updated(self) -> bool:
+        return self._location_updated
 
     def set_kinematic_parameters(self, acceleration: float, deceleration: float, velocity: float) -> None:
         """
@@ -306,7 +317,10 @@ class Agent:
             return self.state
         self._current_time_step += 1
         self.location.update(self._current_direction, self._motion_profile.position_profile[self._current_time_step])
-
+        # update the agents last known grid position
+        current_location = (int(self.location.X), int(self.location.Y))
+        if current_location != self._last_location:
+            self._location_updated = True
         # check if the movement is complete
         if self._current_time_step == self._movement_steps-1:
             self.state = AgentState.IDLE
@@ -320,3 +334,5 @@ class Agent:
         """
         # call the callback
         self._callbacks[task.task_id](*task.args)
+
+

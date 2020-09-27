@@ -6,8 +6,8 @@
    
 """
 import unittest
-from arena import Arena
-from agent import *
+from core.arena import Arena
+from core.agent import *
 from routing.a_star import AStar, AStarNode
 from routing.status import RoutingStatus
 

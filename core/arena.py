@@ -6,7 +6,7 @@
     creates a 2D Arena of tiles that can be used for path finding etc.
    
 """
-from tile import Tile, TileState
+from core.tile import Tile, TileState
 import numpy as np
 
 

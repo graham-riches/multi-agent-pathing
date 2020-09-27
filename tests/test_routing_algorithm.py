@@ -8,9 +8,9 @@
 import unittest
 from routing.status import RoutingStatus
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm, Node
-from arena import Arena
-from agent import *
-from tile import TileState
+from core.arena import Arena
+from core.agent import *
+from core.tile import TileState
 
 
 class NodeMock(Node):

@@ -1,15 +1,9 @@
 """
-    @file sequential.py
-    @brief route agents towards their goal sequentially using a_star.
+    @file sequential_rerouting.py
+    @brief route agents towards their goal and re-route as agents complete tasks
     @author Graham Riches
     @details
-        This is intended to be a rather poor multi-agent routing algorithm that will route all agents
-        towards their target goal. The main premise is as follows:
-            - route the first agent to it's goal reserving all squares as required
-            - attempt to route the other agents
-            - if any other agents CAN be routed to their goal, route them as well
-            - after every task completed event, see if any other agents can be routed
-            - continue until all agents have reached their goal location
+        Route agents towards their goal squares and re-route them whenever an agent completes a task.
 """
 
 from routing.routing_algorithm import MultiAgentAlgorithm, SingleAgentAlgorithm
@@ -18,7 +12,7 @@ from core.arena import Arena
 from core.agent import *
 
 
-class Sequential(MultiAgentAlgorithm):
+class SequentialRerouting(MultiAgentAlgorithm):
     def __init__(self, arena: Arena, agents: list, algorithm: SingleAgentAlgorithm) -> None:
         """
         create an instance of the sequential routing algorithm
@@ -26,7 +20,7 @@ class Sequential(MultiAgentAlgorithm):
         :param agents: list of agents
         :param algorithm: main a_star routing algorithm
         """
-        super(Sequential, self).__init__(arena, agents, algorithm)
+        super(SequentialRerouting, self).__init__(arena, agents, algorithm)
         self.active_agents = [False for agent in self.agents]
         self.initialized = [False for agent in self.agents]
 
@@ -38,6 +32,7 @@ class Sequential(MultiAgentAlgorithm):
         """
         for idx, agent in enumerate(self.agents):
             agent.update()
+
             # initialize the agent if required
             if not self.initialized[idx]:
                 self.initialize_agent(idx)
@@ -79,18 +74,23 @@ class Sequential(MultiAgentAlgorithm):
         :param target: target location tuple
         :return:
         """
-        if target is None:
+        if (target is None) or (self.active_agents[agent_id]):
             return
+        # clear the agents task queue and blockages if it is idle
+        self.agent_tasks[agent_id] = list()
+        while len(self.agent_reserved_squares[agent_id]) > 0:
+            self.clear_last_task_blockage(agent_id)
+
         agent = self.agents[agent_id]
         # reset the main routing algorithm
         self.routing_algorithm.reset()
         status = self.routing_algorithm.route(agent, target)
         if status == RoutingStatus.SUCCESS:
-            # create the path and queue the tasks
+            # create the path and queue the first routing task
             route_status = self.routing_algorithm.create_path()
             if route_status == RoutingStatus.SUCCESS:
-                for task in self.routing_algorithm.path:
-                    self.add_agent_task(agent_id, task)
+                self.add_agent_task(agent_id, self.routing_algorithm.path[0])
+                self.start_new_task(agent_id)
 
     def route_on_completion(self) -> None:
         """
@@ -98,7 +98,7 @@ class Sequential(MultiAgentAlgorithm):
         :return:
         """
         for idx, agent in enumerate(self.agents):
-            if not self.is_agent_at_goal(idx):
+            if (not self.is_agent_at_goal(idx)) and (not self.active_agents[idx]):
                 self.route(idx, self.agent_goals[idx])
 
 
