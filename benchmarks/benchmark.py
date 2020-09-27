@@ -6,6 +6,7 @@
         Loads a simulation benchmark file and runs the simulation for a given algorithm.
    
 """
+import sys
 import json
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm
 from render_engine import Renderer
@@ -153,8 +154,12 @@ class BenchmarkRunner:
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 1:
+        print('Usage: python benchmark.py benchmark.json')
+    config_file = sys.argv[1]
+
     # load the configuration
-    runner = BenchmarkRunner('crossover.json')
+    runner = BenchmarkRunner(config_file)
     runner.load_configuration()
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
