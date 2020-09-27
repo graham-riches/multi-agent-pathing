@@ -124,7 +124,7 @@ class Renderer:
 
         if not found_agent:
             if self.agent_selected is not None:
-                self.routing_manager.route(self.agent_selected, x_ind, y_ind)
+                self.routing_manager.route(self.agent_selected, (x_ind, y_ind))
                 self.agent_selected = None
             else:
                 if button == LEFT:

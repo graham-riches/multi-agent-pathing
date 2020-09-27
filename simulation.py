@@ -9,6 +9,7 @@ import threading
 from render_engine import Renderer
 from command_line import CommandLine
 from routing.a_star import AStar
+from routing.managers.sequential import Sequential
 from agent import *
 from arena import Arena
 
@@ -39,6 +40,9 @@ sim_agents.append(sim_agent_1)
 algorithm = AStar(sim_arena, sim_agents)
 algorithm.turn_factor = 2
 
+# create the pathing algorithm
+routing_manager = Sequential(sim_arena, sim_agents, algorithm)
+
 # setup the renderer
 renderer = Renderer(sim_arena, sim_agents, routing_manager, BASE_TIME_STEP, BASE_DPI)
 
@@ -51,7 +55,6 @@ while True:
     renderer.render_arena()
     for agent_id, agent in enumerate(sim_agents):
         state = agent.update()
-        if state == AgentState.IDLE:
-            routing_manager.signal_agent_event(agent_id, AgentEvent.TASK_COMPLETED)
+        routing_manager.run_time_step()
         renderer.render_agent(agent_id)
     renderer.update()

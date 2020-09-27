@@ -134,12 +134,11 @@ class MultiAgentAlgorithm(ABC):
         pass
 
     @abstractmethod
-    def route(self, agent_id: int, x_location: int, y_location: int) -> None:
+    def route(self, agent_id: int, target: tuple) -> None:
         """
         Run the routing algorithm to route an agent to a specific location
         :param agent_id: the agent id
-        :param x_location:
-        :param y_location:
+        :param target: (x, y) tuple of the target location
         :return: None
         """
         pass
@@ -150,10 +149,22 @@ class MultiAgentAlgorithm(ABC):
         :return: boolean
         """
         for idx, agent in enumerate(self.agents):
-            location = (agent.location.X, agent.location.Y)
-            if location != self.agent_goals[idx]:
+            if not self.is_agent_at_goal(idx):
                 return False
         return True
+
+    def is_agent_at_goal(self, agent_id: int) -> bool:
+        """
+        check if an agent has reached its goal location
+        :param agent_id: the id of the agent
+        :return: boolean
+        """
+        agent = self.agents[agent_id]
+        location = (agent.location.X, agent.location.Y)
+        if location != self.agent_goals[agent_id]:
+            return False
+        else:
+            return True
 
     def signal_agent_event(self, agent_id: int, event: AgentEvent) -> None:
         """
@@ -175,7 +186,7 @@ class MultiAgentAlgorithm(ABC):
         # clear any previous routing blockages
         reserved_squares = self.agent_reserved_squares[agent_id]
         if len(reserved_squares) > 0:
-            squares = reserved_squares.pop()
+            squares = reserved_squares.pop(0)
             self.arena.clear_blockage(squares['x'], squares['y'])
 
     def add_agent_task(self, agent_id: int, task: AgentTask) -> None:

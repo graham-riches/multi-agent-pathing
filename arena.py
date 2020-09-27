@@ -34,7 +34,7 @@ class Arena:
         self._grid = np.ndarray((x_units, y_units), dtype=object)
         for x in range(x_units):
             for y in range(y_units):
-                self._grid[x][y] = Tile(TileState.FREE)
+                self._grid[int(x)][int(y)] = Tile(TileState.FREE)
 
     def set_blockage(self, x_values: list, y_values: list) -> None:
         """
@@ -45,7 +45,7 @@ class Arena:
         """
         for x in x_values:
             for y in y_values:
-                self._grid[x][y].set_blocked()
+                self._grid[int(x)][int(y)].set_blocked()
 
     def clear_blockage(self, x_values: list, y_values: list) -> None:
         """
@@ -56,7 +56,7 @@ class Arena:
         """
         for x in x_values:
             for y in y_values:
-                self._grid[x][y].set_free()
+                self._grid[int(x)][int(y)].set_free()
 
     def set_reserved(self, x_values: list, y_values: list) -> None:
         """
@@ -67,7 +67,7 @@ class Arena:
         """
         for x in x_values:
             for y in y_values:
-                self._grid[x][y].set_reserved()
+                self._grid[int(x)][int(y)].set_reserved()
 
     def get_tile_state(self, x_location: int, y_location: int) -> TileState:
         """
