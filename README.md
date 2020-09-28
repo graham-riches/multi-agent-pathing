@@ -47,5 +47,32 @@ To configure a new benchmark, copy the Json schema from the crossover.json simul
 ### 10x10 Crossover
 In this benchmark, each agent starts along one side of a 10x10 arena grid and has the goal of crossing over the arena to end up at a mirrored location. For example, and agent starting at (0, 0) will attempt to route to (9, 9).
 
-
+#### 10x10 Crossover With a Sequential Routing Algorithm
+This algorithm tries to route each agent as follows:
+```
+For agent [i]
+    - try to route to goal location
+    - if route is valid, reserve all route squares for each distinct movement on the route
+    - start moving
+    - if the route is not valid, wait
+    - every time an agent completes a move, unblock the squares and re-route all idle agents towards their goal
+    - repeat
+```
 ![multi-agent](docs/imgs/multi-agent.gif)
+
+#### 10x10 Crossover With an Aggressive Re-routing Algorithm
+This algorithm tries to route each agent as follows:
+```
+For agent [i]
+    - try to route to goal location
+    - if route is valid, reserve all route squares for only the first segment of the route
+    - start moving
+    - if the route is not valid, wait
+
+    - every time an agent completes a move, unblock the squares and re-route all idle agents towards their goal
+    - as before, only reserve the first segment on each path
+    - repeat
+```
+
+While this looks more chaotic, it's actually 37% faster than the single sequential algorithm above
+![multi-agent](docs/imgs/chaos-mode.gif)
