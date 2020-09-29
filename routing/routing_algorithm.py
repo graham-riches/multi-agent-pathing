@@ -30,7 +30,7 @@ class SingleAgentAlgorithm(ABC):
     def __init__(self, arena: Arena, agents: list) -> None:
         """
         Initialize a routing algorithm with the Arena and a list of agents. This finds an "optimal" path to
-        a goal for a single agent using whatever means the child classes chooses.
+        a goal for a single agent using whatever means the child class chooses.
         :param arena: the arena for the simulation
         :param agents: the list of all simulation agents
         """
@@ -113,22 +113,28 @@ class MultiAgentAlgorithm(ABC):
     def __init__(self, arena: Arena, agents: list, algorithm: SingleAgentAlgorithm) -> None:
         """
         Creates a multi-agent routing algorithm. This manages routing a group of agents towards a goal.
+        Note: this is an abstract base class that is meant to be inherited by new routing algorithm classes. This
+        provides a lot of useful features that can be used by a child algorithm that has more specific requirement.
+        The virtual methods that the child MUST implement are the route, and run_time_step methods.
         :param arena: arena object
         :param agents: lists of agents
         :param algorithm: the single agent routing algorithm to use
         """
         self.arena = arena  # the arena object
         self.agents = agents  # list of agents
-        self.routing_algorithm = algorithm
+        self.routing_algorithm = algorithm  # single agent routing algorithm
+        self.initialized = False  # initializer for the simulation
+        self.active_agents = [False for agent in self.agents]
         self.agent_tasks = [list() for agent in self.agents]  # empty task list for each agent
         self.agent_reserved_squares = [list() for agent in self.agents]  # empty reserved squares lists
         self.agent_goals = [None for agent in self.agents]  # goal location for each agent
-        self.agent_callbacks = {AgentEvent.TASK_COMPLETED: self.clear_last_task_blockage}
+        self.agent_callbacks = {AgentEvent.TASK_COMPLETED: self.agent_move_completed_callback}
 
     @abstractmethod
     def run_time_step(self) -> None:
         """
         abstract method to run a simulation time step. This method will contain the multi-agent management algorithm
+        that manages each simulation time step. This is where you can modify the run-time behaviour of your algorithm.
         :return: None
         """
         pass
@@ -142,6 +148,18 @@ class MultiAgentAlgorithm(ABC):
         :return: None
         """
         pass
+
+    def initialize(self) -> None:
+        """
+        Initialize the simulation
+        :param agent_id: the agent id
+        :return:
+        """
+        for agent_id, agent in enumerate(self.agents):
+            goal = self.agent_goals[agent_id]
+            if goal is not None:
+                self.route(agent_id, goal)
+        self.initialized = True
 
     def is_simulation_complete(self) -> bool:
         """
@@ -166,28 +184,14 @@ class MultiAgentAlgorithm(ABC):
         else:
             return True
 
-    def signal_agent_event(self, agent_id: int, event: AgentEvent) -> None:
+    def set_agent_goal(self, agent_id: int, location: tuple) -> None:
         """
-        signal to the routing manager that something of interest has happened
-        :param agent_id: the ID of the agent that is signalling
-        :param event: the event type
+        set the goal location for an agent. The algorithm will continually route to here until 'Done'
+        :param agent_id: the id of the agent
+        :param location: the target/goal location
         :return: None
         """
-        # call the callback associated with the event type
-        self.agent_callbacks[event](agent_id)
-
-    def clear_last_task_blockage(self, agent_id: int) -> None:
-        """
-        callback to call when an agent task has completed. This will clear
-        the routing blocks from the last task
-        :param agent_id: the id of the agent
-        :return:
-        """
-        # clear any previous routing blockages
-        reserved_squares = self.agent_reserved_squares[agent_id]
-        if len(reserved_squares) > 0:
-            squares = reserved_squares.pop(0)
-            self.arena.clear_blockage(squares['x'], squares['y'])
+        self.agent_goals[agent_id] = location
 
     def add_agent_task(self, agent_id: int, task: AgentTask) -> None:
         """
@@ -201,14 +205,50 @@ class MultiAgentAlgorithm(ABC):
             self.reserve_squares_for_routing(agent_id, task)
         self.agent_tasks[agent_id].append(task)
 
-    def set_agent_goal(self, agent_id: int, location: tuple) -> None:
+    def start_new_task(self, agent_id: int) -> None:
         """
-        set the goal location for an agent. The algorithm will continually route to here until 'Done'
-        :param agent_id: the id of the agent
-        :param location: the target/goal location
+        start a new agent task from it's queue
+        :param agent_id: the agents id
         :return: None
         """
-        self.agent_goals[agent_id] = location
+        if len(self.agent_tasks[agent_id]) > 0:
+            new_task = self.agent_tasks[agent_id].pop(0)
+            self.agents[agent_id].start_task(new_task)
+            self.active_agents[agent_id] = True
+
+    def signal_agent_event(self, agent_id: int, event: AgentEvent) -> None:
+        """
+        signal to the routing manager that something of interest has happened
+        :param agent_id: the ID of the agent that is signalling
+        :param event: the event type
+        :return: None
+        """
+        # call the callback associated with the event type
+        self.agent_callbacks[event](agent_id)
+
+    def agent_move_completed_callback(self, agent_id: int) -> None:
+        """
+        callback function for when an agent completes a move.
+        :param agent_id: the agents ID
+        :return: None
+        """
+        # clear any blockages
+        self.clear_last_task_blockage(agent_id)
+        # set the agent to not active
+        self.active_agents[agent_id] = False
+
+    def clear_last_task_blockage(self, agent_id: int) -> None:
+        """
+        callback to call when an agent task has completed. This will clear
+        the routing blocks from the last task
+        :param agent_id: the id of the agent
+        :return:
+        """
+        # clear any previous routing blockages
+        reserved_squares = self.agent_reserved_squares[agent_id]
+        if len(reserved_squares) > 0:
+            squares = reserved_squares.pop(0)
+            self.arena.clear_blockage(squares['x'], squares['y'])
 
     def reserve_squares_for_routing(self, agent_id: int, task: AgentTask) -> tuple:
         """

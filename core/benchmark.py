@@ -146,7 +146,9 @@ class BenchmarkRunner:
                 goal = (target_location[0], target_location[1])
                 self._manager_algorithm.set_agent_goal(parameters['agent_id'], goal)
 
-        # run the simulation until complete
+        # initialize the simulation and run until complete
+        self._manager_algorithm.initialize()
+
         while not self._manager_algorithm.is_simulation_complete():
             self._manager_algorithm.run_time_step()
             self.render_simulation()

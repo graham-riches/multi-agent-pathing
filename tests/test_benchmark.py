@@ -50,4 +50,3 @@ class TestBenchmarkLoader(unittest.TestCase):
         cycles = self.loader.run()
         self.assertEqual(0, cycles)
 
-s

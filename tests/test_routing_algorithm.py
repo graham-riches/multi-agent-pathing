@@ -62,7 +62,7 @@ class MultiAgentAlgorithmMock(MultiAgentAlgorithm):
     def run_time_step(self) -> None:
         pass
 
-    def route(self, agent_id: int, x_location: int, y_location: int) -> None:
+    def route(self, agent_id: int, location: tuple) -> None:
         pass
 
 
@@ -100,6 +100,26 @@ class TestMultiAgentAlgorithm(unittest.TestCase):
         self.routing_manager.signal_agent_event(0, AgentEvent.TASK_COMPLETED)
         for i in range(1, 4):
             self.assertEqual(TileState.FREE, self.arena.get_tile_state(i, 0))
+
+    def test_completing_task_clears_agent_active(self):
+        move_x_task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 3])
+        self.routing_manager.add_agent_task(0, move_x_task)
+        self.routing_manager.signal_agent_event(0, AgentEvent.TASK_COMPLETED)
+        self.assertFalse(self.routing_manager.active_agents[0])
+
+    def test_initialize_algorithm(self):
+        self.routing_manager.initialize()
+        self.assertTrue(self.routing_manager.initialized)
+
+    def test_is_agent_at_goal(self):
+        self.routing_manager.set_agent_goal(0, (0, 0))
+        self.assertTrue(self.routing_manager.is_agent_at_goal(0))
+
+    def test_start_new_task(self):
+        move_x_task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 3])
+        self.routing_manager.add_agent_task(0, move_x_task)
+        self.routing_manager.start_new_task(0)
+        self.assertTrue(self.routing_manager.active_agents[0])
 
 
 class TestSingleAgentAlgorithm(unittest.TestCase):

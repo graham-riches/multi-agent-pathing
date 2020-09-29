@@ -27,8 +27,6 @@ class Sequential(MultiAgentAlgorithm):
         :param algorithm: main a_star routing algorithm
         """
         super(Sequential, self).__init__(arena, agents, algorithm)
-        self.active_agents = [False for agent in self.agents]
-        self.initialized = [False for agent in self.agents]
 
     def run_time_step(self) -> None:
         """
@@ -38,39 +36,17 @@ class Sequential(MultiAgentAlgorithm):
         """
         for idx, agent in enumerate(self.agents):
             agent.update()
-            # initialize the agent if required
-            if not self.initialized[idx]:
-                self.initialize_agent(idx)
 
             # signal that the last task completed and route other agents
             if agent.state == AgentState.IDLE:
                 if self.active_agents[idx]:
                     self.signal_agent_event(idx, AgentEvent.TASK_COMPLETED)
-                    self.active_agents[idx] = False
                     self.route_on_completion()
+
+                # check for new tasks in the agents task queue
                 if not self.is_agent_at_goal(idx):
                     # check for any new tasks
                     self.start_new_task(idx)
-
-    def initialize_agent(self, agent_id: int) -> None:
-        """
-        initialize an agent at the start of the sim
-        :param agent_id: the agent id
-        :return:
-        """
-        self.route(agent_id, self.agent_goals[agent_id])
-        self.initialized[agent_id] = True
-
-    def start_new_task(self, agent_id: int) -> None:
-        """
-        start a new agent task from it's queue
-        :param agent_id: the agents id
-        :return: None
-        """
-        if len(self.agent_tasks[agent_id]) > 0:
-            new_task = self.agent_tasks[agent_id].pop(0)
-            self.agents[agent_id].start_task(new_task)
-            self.active_agents[agent_id] = True
 
     def route(self, agent_id: int, target: tuple) -> None:
         """
@@ -100,6 +76,3 @@ class Sequential(MultiAgentAlgorithm):
         for idx, agent in enumerate(self.agents):
             if not self.is_agent_at_goal(idx):
                 self.route(idx, self.agent_goals[idx])
-
-
-
