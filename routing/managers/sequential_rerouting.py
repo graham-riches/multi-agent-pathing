@@ -5,7 +5,6 @@
     @details
         Route agents towards their goal squares and re-route them whenever an agent completes a task.
 """
-
 from routing.routing_algorithm import MultiAgentAlgorithm, SingleAgentAlgorithm
 from routing.status import RoutingStatus
 from core.arena import Arena
@@ -23,6 +22,30 @@ class SequentialRerouting(MultiAgentAlgorithm):
         super(SequentialRerouting, self).__init__(arena, agents, algorithm)
         self.active_agents = [False for agent in self.agents]
         self.initialized = [False for agent in self.agents]
+        self._max_route_length = 1000  # very high route length by default
+        self._route_by_most_distant = False  # default to being greedy
+
+    @property
+    def max_route_length(self) -> int:
+        """
+        maximum single agent routing length
+        """
+        return self._max_route_length
+
+    @max_route_length.setter
+    def max_route_length(self, length: int) -> None:
+        self._max_route_length = length
+
+    @property
+    def route_by_most_distant(self) -> bool:
+        """
+        route agents by farthest from goal first
+        """
+        return self._route_by_most_distant
+
+    @route_by_most_distant.setter
+    def route_by_most_distant(self, enable: bool) -> None:
+        self._route_by_most_distant = enable
 
     def run_time_step(self) -> None:
         """
@@ -65,17 +88,38 @@ class SequentialRerouting(MultiAgentAlgorithm):
             # create the path and queue the first routing task
             route_status = self.routing_algorithm.create_path()
             if route_status == RoutingStatus.SUCCESS:
-                self.add_agent_task(agent_id, self.routing_algorithm.path[0])
+                task = self.routing_algorithm.path[0]
+                # check if the move task is less than the max length allowed and truncate if its too large
+                if task.args[1] >= self._max_route_length:
+                    task.args[1] = self._max_route_length
+                self.add_agent_task(agent_id, task)
                 self.start_new_task(agent_id)
+
+    def get_agents_by_distance(self) -> list:
+        """
+        return a list of agents total X+Y distance to their goal sorted smallest
+        to largest.
+        :return: list of agents
+        """
+        distance_dict = dict()
+        for agent_id, agent in enumerate(self.agents):
+            distance_x = abs(self.agent_goals[agent_id][0] - agent.location.X)
+            distance_y = abs(self.agent_goals[agent_id][1] - agent.location.Y)
+            distance_dict[agent_id] = distance_x + distance_y
+        # sort the dict and get the list of agents out of it
+        sorted_by_distance = {dist: agent_id for dist, agent_id in sorted(distance_dict.items(), key=lambda item: item[1])}
+        return [x for x, v in sorted_by_distance.items()]
 
     def route_on_completion(self) -> None:
         """
         Attempt to route other agents when an agent task completed event is received
         :return:
         """
-        for idx, agent in enumerate(self.agents):
-            if (not self.is_agent_at_goal(idx)) and (not self.active_agents[idx]):
-                self.route(idx, self.agent_goals[idx])
+        # check to route agents by farthest or closest.
+        agents_by_distance = self.get_agents_by_distance()
+        if self._route_by_most_distant:
+            agents_by_distance.reverse()
 
-
-
+        for agent_id in agents_by_distance:
+            if (not self.is_agent_at_goal(agent_id)) and (not self.active_agents[agent_id]):
+                self.route(agent_id, self.agent_goals[agent_id])

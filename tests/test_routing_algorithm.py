@@ -86,17 +86,20 @@ class TestMultiAgentAlgorithm(unittest.TestCase):
         move_x_task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 3])
         move_y_task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.Y, 3])
         self.routing_manager.add_agent_task(0, move_x_task)
-        for i in range(1, 4):
+        for i in range(1, 3):
             self.assertEqual(TileState.RESERVED, self.arena.get_tile_state(i, 0))
+        self.assertEqual(TileState.AGENT_TARGET, self.arena.get_tile_state(3, 0))
         self.routing_manager.add_agent_task(0, move_y_task)
-        for i in range(1, 4):
+        for i in range(1, 3):
             self.assertEqual(TileState.RESERVED, self.arena.get_tile_state(3, i))
+        self.assertEqual(TileState.AGENT_TARGET, self.arena.get_tile_state(3, 3))
 
     def test_adding_and_completing_task_clears_blockage(self):
         move_x_task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 3])
         self.routing_manager.add_agent_task(0, move_x_task)
-        for i in range(1, 4):
+        for i in range(1, 3):
             self.assertEqual(TileState.RESERVED, self.arena.get_tile_state(i, 0))
+        self.assertEqual(TileState.AGENT_TARGET, self.arena.get_tile_state(3, 0))
         self.routing_manager.signal_agent_event(0, AgentEvent.TASK_COMPLETED)
         for i in range(1, 4):
             self.assertEqual(TileState.FREE, self.arena.get_tile_state(i, 0))

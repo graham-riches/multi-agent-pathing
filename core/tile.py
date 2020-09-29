@@ -10,6 +10,7 @@ class TileState(Enum):
     BLOCKED = 1
     FREE = 2
     RESERVED = 3
+    AGENT_TARGET = 4
 
 
 class Tile:
@@ -44,3 +45,10 @@ class Tile:
         set the state of a Tile to RESERVED
         """
         self.state = TileState.RESERVED
+
+    def set_agent_target(self) -> None:
+        """
+        set the state of a tile to AGENT_TARGET, which means an agent has marked it
+        as a destination square
+        """
+        self.state = TileState.AGENT_TARGET

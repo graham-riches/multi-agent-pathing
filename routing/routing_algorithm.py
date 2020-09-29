@@ -285,6 +285,10 @@ class MultiAgentAlgorithm(ABC):
             tiles = list(range(int(y_start), int(y_target), int(sign)))
             x_tiles = [x]
             y_tiles = tiles
+
         self.arena.set_reserved(x_tiles, y_tiles)
         self.agent_reserved_squares[agent_id].append({'x': x_tiles, 'y': y_tiles})
+
+        # set the last square as an agent target square
+        self.arena.set_agent_target(x_tiles[-1], y_tiles[-1])
         return x_tiles, y_tiles

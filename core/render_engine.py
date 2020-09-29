@@ -51,8 +51,8 @@ class Renderer:
 
         # dict of color keys
         self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'tile_reserved': (60, 60, 60),
-                            'grid_lines': (255, 255, 255), 'agent': COLORS, 'agent_selected': (245, 100, 90),
-                            'agent_border': (0, 0, 0)}
+                            'tile_target': (200, 135, 135), 'grid_lines': (255, 255, 255), 'agent': COLORS,
+                            'agent_selected': (245, 100, 90), 'agent_border': (0, 0, 0)}
         self.total_elements = len(self.colors_dict)
 
     def render_arena(self) -> None:
@@ -68,6 +68,8 @@ class Renderer:
                     color = self.colors_dict['tile_free']
                 elif self.arena.get_tile_state(x, y) == TileState.BLOCKED:
                     color = self.colors_dict['tile_blocked']
+                elif self.arena.get_tile_state(x, y) == TileState.AGENT_TARGET:
+                    color = self.colors_dict['tile_target']
                 else:
                     color = self.colors_dict['tile_reserved']
                 # draw the tile

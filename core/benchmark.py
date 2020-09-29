@@ -166,9 +166,12 @@ if __name__ == '__main__':
     runner.load_configuration()
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
+    a_star.inline_factor = 10
     runner.algorithm = a_star
     routing_manager = SequentialRerouting(runner.arena, runner.agents, runner.algorithm)
+    routing_manager.max_route_length = 7
+    routing_manager.route_by_most_distant = False
     runner.routing_manager = routing_manager
     run_cycles = runner.run()
-    print(run_cycles)
+    print('BENCHMARK: Simulation cycles {}'.format(run_cycles))
 

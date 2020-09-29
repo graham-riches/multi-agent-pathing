@@ -30,9 +30,10 @@ class AStarNode(Node):
 
         # store the value of any algorithm weights. Note: the travelled cost is directly related to the parent node
         self.total_cost = 0
-        self._travelled_cost = 0
-        self._heuristic_cost = 0
-        self._turn_cost = 0
+        self._travelled_cost = 0  # penalize distance travelled
+        self._heuristic_cost = 0  # penalize being far from the goal
+        self._turn_cost = 0  # penalize turning or changing directions
+        self._inline_cost = 0  # penalize being inline with another agent
 
     @property
     def travelled_cost(self) -> float:
@@ -61,12 +62,21 @@ class AStarNode(Node):
         self._turn_cost = cost
         self.calculate_total_cost()
 
+    @property
+    def inline_cost(self) -> float:
+        return self._inline_cost
+
+    @inline_cost.setter
+    def inline_cost(self, cost: float) -> None:
+        self._inline_cost = cost
+        self.calculate_total_cost()
+
     def calculate_total_cost(self) -> None:
         """
         Calculate the total routing cost for a node
         :return:
         """
-        self.total_cost = self._heuristic_cost + self._travelled_cost + self._turn_cost
+        self.total_cost = self._heuristic_cost + self._travelled_cost + self._turn_cost + self._inline_cost
 
     def __eq__(self, other) -> bool:
         """
@@ -92,6 +102,7 @@ class AStar(SingleAgentAlgorithm):
         self.target = None
         self.came_from = None
         self._turn_factor = 0
+        self._inline_factor = 0
         self.reset()
 
     @property
@@ -101,6 +112,14 @@ class AStar(SingleAgentAlgorithm):
     @turn_factor.setter
     def turn_factor(self, factor: float) -> None:
         self._turn_factor = factor
+
+    @property
+    def inline_factor(self) -> float:
+        return self._inline_factor
+
+    @inline_factor.setter
+    def inline_factor(self, factor: float) -> None:
+        self._inline_factor = factor
 
     def reset(self) -> None:
         """
@@ -157,6 +176,7 @@ class AStar(SingleAgentAlgorithm):
                 # calculate the node costs
                 neighbour.heuristic_cost = self.calculate_heuristic_cost(neighbour, self.target)
                 neighbour.turn_cost = self.calculate_turn_cost(neighbour)
+                neighbour.inline_cost = self.calculate_inline_cost(neighbour)
                 # if the came from at this location is empty, the current path is guaranteed to be the most optimal
                 # path found so far
                 came_from_node = self.came_from[int(neighbour.location[0])][int(neighbour.location[1])]
@@ -206,6 +226,24 @@ class AStar(SingleAgentAlgorithm):
             current_node = parent
             parent = parent.parent
         return turns * self._turn_factor
+
+    def calculate_inline_cost(self, node: AStarNode) -> float:
+        """
+        calculate the cost of being inline with another agent
+        :param node:
+        :return:
+        """
+        x_size, y_size = self.arena.get_dimensions()
+        # get all tiles inline with
+        y_tiles = [(node.location[0], y) for y in range(y_size)]
+        x_tiles = [(x, node.location[1]) for x in range(x_size)]
+        tiles = y_tiles
+        tiles.extend(x_tiles)
+        for tile in tiles:
+            state = self.arena.get_tile_state(tile[0], tile[1])
+            if state == TileState.AGENT_TARGET:
+                return self._inline_factor
+        return 0
 
     def construct_node_path(self, target_node: AStarNode) -> list:
         """

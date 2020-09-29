@@ -135,3 +135,10 @@ class TestAStar(unittest.TestCase):
         node_5 = AStarNode((3, 2), parent=node_4)
         turn_cost = self.a_star.calculate_turn_cost(node_5)
         self.assertEqual(2, turn_cost)
+
+    def test_calculate_inline_cost(self):
+        self.a_star.inline_factor = 10
+        self.arena.set_agent_target(3, 3)
+        node = AStarNode((1, 3))
+        score = self.a_star.calculate_inline_cost(node)
+        self.assertEqual(10, score)

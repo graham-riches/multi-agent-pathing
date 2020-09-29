@@ -69,6 +69,15 @@ class Arena:
             for y in y_values:
                 self._grid[int(x)][int(y)].set_reserved()
 
+    def set_agent_target(self, x_location: int, y_location: int) -> None:
+        """
+        Reserve a square as an agents target square
+        :param x_location: x location
+        :param y_location: y location
+        :return:
+        """
+        self._grid[(int(x_location))][int(y_location)].set_agent_target()
+
     def get_tile_state(self, x_location: int, y_location: int) -> TileState:
         """
         Get the tile state for a specific location

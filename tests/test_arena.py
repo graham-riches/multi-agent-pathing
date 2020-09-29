@@ -69,3 +69,8 @@ class TestArena(unittest.TestCase):
             for check in test_neighbours[idx]:
                 self.assertTrue((check in neighbours))
 
+    def test_set_agent_target(self):
+        self.arena.set_agent_target(4, 4)
+        state = self.arena.get_tile_state(4, 4)
+        self.assertEqual(TileState.AGENT_TARGET, state)
+
