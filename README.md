@@ -85,6 +85,14 @@ For agent [i]
 While this looks more chaotic, it's actually 37% faster than the single sequential algorithm above  
 ![multi-agent](docs/imgs/chaos-mode.gif)
 
+#### 10x10 Crossover With an Aggressive Re-routing Algorithm and Pathing Weight Optimizations
+This algorithm uses the base A* algorithm with modified weights to penalize things such as move distance, changing
+move direction and finishing a move while inline with another agent. Just with a small amount of modification, this
+algorithm achieves a run time 53% faster than the sequential routing algorithm and 25% faster than the initial
+aggressive re-routing algorithm shown above:
+![inline](docs/imgs/inline.gif)
+
+
 # Algorithm Base Classes
 The routing engines are built to handle algorithms that are derived from a set of abstract base classes that provide some common attributes that all algorithms share.
 
