@@ -17,8 +17,10 @@ class TestMultiObjectiveGeneticAlgorithm(unittest.TestCase):
         self._generations = 10
         parameters = [Parameter(-5, 5, False), Parameter(-5, 5, False), Parameter(-5, 5, False)]
         self._parameters = len(parameters)
-        self.ga = MultiObjectiveGeneticAlgorithm(parameters, self._population_size, self._generations, get_kursawe_fitness)
-        self.ga.create_population()
+        self.ga = MultiObjectiveGeneticAlgorithm(parameters, self._population_size,
+                                                 self._generations, get_kursawe_fitness)
+        self.ga._mutation_multiplier = 0.6
+        self.population = self.ga.create_population()
 
     def tearDown(self):
         self.ga = None
@@ -29,21 +31,21 @@ class TestMultiObjectiveGeneticAlgorithm(unittest.TestCase):
             self.assertTrue(derangement[i] != i)
 
     def test_create_population(self):
-        self.assertTupleEqual((self._population_size, self._parameters + 4), np.shape(self.ga._population))
+        self.assertTupleEqual((self._population_size, self._parameters + 4), np.shape(self.population))
         self.assertTupleEqual((self._generations, self._population_size, self._parameters + 4),
                               np.shape(self.ga._population_history))
         for i in range(self._population_size):
-            individual = self.ga._population[i, :]
+            individual = self.population[i, :]
             for j in range(self.ga._total_parameters):
                 above_lower = individual[j] >= self.ga._parameter_lower_bounds[j]
                 below_upper = individual[j] <= self.ga._parameter_upper_bounds[j]
                 self.assertTrue(above_lower and below_upper)
 
     def test_evaluate_generation(self):
-        self.ga.evaluate_population()
+        self.ga.evaluate_population(self.population)
         for individual in range(self._population_size):
-            self.assertGreater(abs(self.ga._population[individual, self._parameters]), 0)
-            self.assertGreater(abs(self.ga._population[individual, self._parameters + 1]), 0)
+            self.assertGreater(abs(self.population[individual, self._parameters]), 0)
+            self.assertGreater(abs(self.population[individual, self._parameters + 1]), 0)
 
         for key, value in self.ga._fitness_bounds.items():
             self.assertGreater(abs(value), 0)
@@ -65,8 +67,8 @@ class TestMultiObjectiveGeneticAlgorithm(unittest.TestCase):
             self.assertFalse(self.ga.dominates(i2, i1))
 
     def test_pareto_rank(self):
-        self.ga.evaluate_population()
-        population = self.ga.pareto_rank(self.ga._population)
+        population = self.ga.evaluate_population(self.population)
+        population = self.ga.pareto_rank(population)
         rank_index = self._parameters + 2
         current_rank_index = 1
         for individual in range(self._population_size):
@@ -76,10 +78,11 @@ class TestMultiObjectiveGeneticAlgorithm(unittest.TestCase):
                 current_rank_index = rank
 
     def test_calculate_crowding_score(self):
-        self.ga.evaluate_population()
+        population = self.ga.create_population()
+        self.ga.evaluate_population(population)
         rank_index = self._parameters + 2
         crowding_index = self._parameters + 3
-        population = self.ga.pareto_rank(self.ga._population)
+        population = self.ga.pareto_rank(population)
         population = self.ga.crowded_rank(population)
         # for each unique rank, make sure that all middle members have values less than the outliers
         unique_ranks = np.unique(population[:, rank_index])
@@ -93,7 +96,8 @@ class TestMultiObjectiveGeneticAlgorithm(unittest.TestCase):
                     self.assertLess(population[indices[i], crowding_index], max_crowding)
 
     def test_competition(self):
-        self.ga.evaluate_population()
+        population = self.ga.create_population()
+        self.ga.evaluate_population(population)
         rank_index = self._parameters + 2
         crowding_index = self._parameters + 3
         # make some fake individuals to test the competition
@@ -110,9 +114,55 @@ class TestMultiObjectiveGeneticAlgorithm(unittest.TestCase):
             for ind, param in enumerate(selected):
                 self.assertEqual(i1[ind], param)
 
-    def test_plot_pareto(self):
-        self.ga.initialize()
-        self.ga.plot_pareto()
+    def test_crowded_tournament(self):
+        # this one is tough to evaluate, so just ensure the size is what we expect
+        self.ga.evaluate_population(self.population)
+        population = self.ga.pareto_rank(self.population)
+        population = self.ga.crowded_rank(population)
+        pop_size = np.shape(population)
+        population = self.ga.crowded_tournament(population)
+        self.assertTupleEqual(pop_size, np.shape(population))
 
+    def test_crossover_points(self):
+        points = self.ga.crossover_index()
+        # count total points should be less than or equal to max child crossovers
+        total = sum(points)
+        self.assertLessEqual(total, self.ga.max_crossovers)
 
+    def test_slice(self):
+        population = self.ga.evaluate_population(self.population)
+        population = self.ga.pareto_rank(population)
+        population = self.ga.crowded_rank(population)
+        pop_size = np.shape(population)
+        population = self.ga.crowded_tournament(population)
+        big_pop = np.concatenate((population, population))
+        new_pop = self.ga.slice(big_pop)
+        self.assertTupleEqual(pop_size, np.shape(new_pop))
 
+    def test_mutation(self):
+        compare_pop = np.zeros(np.shape(self.population))
+        for individual in range(self._population_size):
+            for gene in range(self._parameters):
+                compare_pop[individual, gene] = self.population[individual, gene]
+        new_population = self.ga.mutation(self.population)
+        all_the_same = True
+        for individual in range(self._population_size):
+            for gene in range(self._parameters):
+                if new_population[individual, gene] != compare_pop[individual, gene]:
+                    all_the_same = False
+        self.assertFalse(all_the_same)
+
+    def test_blended_crossover(self):
+        self.ga._current_generation = 1
+        population = self.ga.create_population()
+        compare_pop = np.zeros(np.shape(population))
+        for individual in range(self._population_size):
+            for gene in range(self._parameters):
+                compare_pop[individual, gene] = population[individual, gene]
+        new_population = self.ga.blended_n_point_crossover(population)
+        all_the_same = True
+        for individual in range(self._population_size):
+            for gene in range(self._parameters):
+                if new_population[individual, gene] != compare_pop[individual, gene]:
+                    all_the_same = False
+        self.assertFalse(all_the_same)
