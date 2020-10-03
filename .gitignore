@@ -128,3 +128,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# any plot outputs and data files
+**PLOTS/
+**.*csv
+**.*npy
