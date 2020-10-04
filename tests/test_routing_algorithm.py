@@ -70,7 +70,7 @@ class TestMultiAgentAlgorithm(unittest.TestCase):
     def setUp(self):
         time_step = 0.005
         self.arena = Arena(10, 10)
-        self.agents = [Agent(0, 0, time_step), Agent(1, 1, time_step)]
+        self.agents = [Agent(0, 0, time_step), Agent(5, 5, time_step)]
         self.algorithm = SingleAgentAlgorithmMock(self.arena, self.agents)
         self.routing_manager = MultiAgentAlgorithmMock(self.arena, self.agents, self.algorithm)
 
@@ -79,7 +79,7 @@ class TestMultiAgentAlgorithm(unittest.TestCase):
 
     def test_is_simulation_completed(self):
         self.routing_manager.set_agent_goal(0, (0, 0))
-        self.routing_manager.set_agent_goal(1, (1, 1))
+        self.routing_manager.set_agent_goal(1, (5, 5))
         self.assertTrue(self.routing_manager.is_simulation_complete())
 
     def test_routing_blockages(self):

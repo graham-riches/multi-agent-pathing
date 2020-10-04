@@ -22,19 +22,7 @@ class SequentialRerouting(MultiAgentAlgorithm):
         super(SequentialRerouting, self).__init__(arena, agents, algorithm)
         self.active_agents = [False for agent in self.agents]
         self.initialized = [False for agent in self.agents]
-        self._max_route_length = 1000  # very high route length by default
         self._route_by_most_distant = False  # default to being greedy
-
-    @property
-    def max_route_length(self) -> int:
-        """
-        maximum single agent routing length
-        """
-        return self._max_route_length
-
-    @max_route_length.setter
-    def max_route_length(self, length: int) -> None:
-        self._max_route_length = length
 
     @property
     def route_by_most_distant(self) -> bool:
@@ -84,14 +72,15 @@ class SequentialRerouting(MultiAgentAlgorithm):
         # reset the main routing algorithm
         self.routing_algorithm.reset()
         status = self.routing_algorithm.route(agent, target)
+        self.agent_routing_state[agent_id] = status
         if status == RoutingStatus.SUCCESS:
             # create the path and queue the first routing task
             route_status = self.routing_algorithm.create_path()
             if route_status == RoutingStatus.SUCCESS:
                 task = self.routing_algorithm.path[0]
                 # check if the move task is less than the max length allowed and truncate if its too large
-                if task.args[1] >= self._max_route_length:
-                    task.args[1] = self._max_route_length
+                if task.args[1] >= agent.max_distance:
+                    task.args[1] = agent.max_distance
                 self.add_agent_task(agent_id, task)
                 self.start_new_task(agent_id)
 

@@ -237,7 +237,7 @@ class AgentMotionProfile:
 
 
 class Agent:
-    def __init__(self, x_position: int, y_position: int, simulation_time_step: float) -> None:
+    def __init__(self, x_position: int, y_position: int, simulation_time_step: float, max_distance: int = 100) -> None:
         """
         Spawns an Agent object that can move about in the coordinate system defined in AgentCoordinates at initial
         location given by the input coordinates.
@@ -247,6 +247,7 @@ class Agent:
         :param x_position: Agents spawned x location
         :param y_position: Agents spawned y location
         :param simulation_time_step: base time step of the simulation for the agent object
+        :param max_distance: max routing distance for an agent
         """
         # public
         self.location = AgentLocation(x_position, y_position)
@@ -254,20 +255,24 @@ class Agent:
         # private
         self._last_location = (x_position, y_position)
         self._location_updated = False
+        self._squares_travelled = 0
         self._time_step = simulation_time_step
         self._movement_steps = None
         self._current_time_step = 0
         self._motion_profile = AgentMotionProfile()  # use default motion parameters
         self._current_direction = None
+        self._max_distance = max_distance
         # function callbacks for task handling
         self._callbacks = {AgentTasks.MOVE: self.start_move,
                            AgentTasks.UPDATE_MOTION_PARAMETERS: self.set_kinematic_parameters}
 
     @property
-    def last_square_position(self) -> tuple:
-        self._location_updated = False
-        self._last_location = (int(self.location.X), int(self.location.Y))
-        return self._last_location
+    def max_distance(self) -> int:
+        return int(self._max_distance)
+
+    @max_distance.setter
+    def max_distance(self, max_distance: int) -> None:
+        self._max_distance = int(max_distance)
 
     def is_location_updated(self) -> bool:
         return self._location_updated
@@ -321,6 +326,8 @@ class Agent:
         current_location = (int(self.location.X), int(self.location.Y))
         if current_location != self._last_location:
             self._location_updated = True
+            self._last_location = current_location
+            self._squares_travelled += 1
         # check if the movement is complete
         if self._current_time_step == self._movement_steps-1:
             self.state = AgentState.IDLE
@@ -335,4 +342,9 @@ class Agent:
         # call the callback
         self._callbacks[task.task_id](*task.args)
 
-
+    def get_squares_travelled(self) -> int:
+        """
+        get the total number of squares an agent has travelled
+        :return: integer distance
+        """
+        return self._squares_travelled

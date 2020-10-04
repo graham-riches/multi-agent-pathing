@@ -135,6 +135,7 @@ class BenchmarkRunner:
         :return:  the number of cycles to complete
         """
         cycles = 0
+        total_distance = 0
         if (self._manager_algorithm is None) and (self._routing_algorithm is None):
             return cycles
 
@@ -148,31 +149,42 @@ class BenchmarkRunner:
 
         # initialize the simulation and run until complete
         self._manager_algorithm.initialize()
-
+        blocked_count = 0
         while not self._manager_algorithm.is_simulation_complete():
             self._manager_algorithm.run_time_step()
             self.render_simulation()
             cycles += 1
-        return cycles
+            if self._manager_algorithm.is_locked():
+                blocked_count += 1
+                if blocked_count > 15:
+                    # TODO: fix this hacky garbage
+                    cycles = 100000
+                    total_distance = 1000
+                    return cycles, total_distance
+            else:
+                blocked_count = 0
+
+        # calculate the total simulation distance
+        for agent in self.agents:
+            total_distance += agent.get_squares_travelled()
+        return cycles, total_distance
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 1:
         print('Usage: python benchmark.py benchmark.json')
     config_file = sys.argv[1]
-
     # load the configuration
     runner = BenchmarkRunner(config_file)
     runner.load_configuration()
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
-    a_star.inline_factor = 5
-    a_star.turn_factor = 0
+    a_star.inline_factor = 0.23384987
+    a_star.turn_factor = 3.67849007
     runner.algorithm = a_star
     routing_manager = SequentialRerouting(runner.arena, runner.agents, runner.algorithm)
-    routing_manager.max_route_length = 9
     routing_manager.route_by_most_distant = False
     runner.routing_manager = routing_manager
-    run_cycles = runner.run()
+    run_cycles, total_distance = runner.run()
     print('BENCHMARK: Simulation cycles {}'.format(run_cycles))
 

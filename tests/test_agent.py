@@ -122,3 +122,11 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(1, self.agent._motion_profile.acceleration)
         self.assertEqual(2, self.agent._motion_profile.deceleration)
         self.assertEqual(3, self.agent._motion_profile.velocity)
+
+    def test_agent_square_counting(self):
+        task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 4])
+        self.agent.start_task(task)
+        sim_steps = self.agent._movement_steps
+        for i in range(sim_steps):
+            self.agent.update()
+        self.assertEqual(4, self.agent.get_squares_travelled())

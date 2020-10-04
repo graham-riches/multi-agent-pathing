@@ -129,6 +129,7 @@ class MultiAgentAlgorithm(ABC):
         self.agent_reserved_squares = [list() for agent in self.agents]  # empty reserved squares lists
         self.agent_goals = [None for agent in self.agents]  # goal location for each agent
         self.agent_callbacks = {AgentEvent.TASK_COMPLETED: self.agent_move_completed_callback}
+        self.agent_routing_state = [None for agent in self.agents]
 
     @abstractmethod
     def run_time_step(self) -> None:
@@ -272,6 +273,9 @@ class MultiAgentAlgorithm(ABC):
                     y += distance
 
         task_args = task.args
+        if abs(task.args[1]) < 1:
+            return None, None
+
         sign = np.sign(task_args[1])
         if task_args[0] == AgentCoordinates.X:
             x_start = x + 1 if sign > 0 else x - 1
@@ -292,3 +296,14 @@ class MultiAgentAlgorithm(ABC):
         # set the last square as an agent target square
         self.arena.set_agent_target(x_tiles[-1], y_tiles[-1])
         return x_tiles, y_tiles
+
+    def is_locked(self) -> bool:
+        """
+        checks if all agents cannot route because they have moved to block themselves
+        :return: boolean
+        """
+        blocked = True
+        for idx, agent in enumerate(self.agents):
+            if agent.state != AgentState.IDLE:
+                blocked = False
+        return blocked
