@@ -68,6 +68,14 @@ class Sequential(MultiAgentAlgorithm):
                 for task in self.routing_algorithm.path:
                     self.add_agent_task(agent_id, task)
 
+    def is_locked(self) -> bool:
+        """
+        check if a simulation is blocked from completing routing
+        TODO: not implemented yet
+        :return: boolean
+        """
+        return False
+
     def route_on_completion(self) -> None:
         """
         Attempt to route other agents when an agent task completed event is received

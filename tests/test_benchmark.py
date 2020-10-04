@@ -47,6 +47,6 @@ class TestBenchmarkLoader(unittest.TestCase):
         self.assertEqual(10, len(self.loader.tasks))
 
     def test_no_algorithms_returns_zero(self):
-        cycles = self.loader.run()
+        cycles, distance = self.loader.run()
         self.assertEqual(0, cycles)
 

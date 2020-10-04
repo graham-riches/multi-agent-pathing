@@ -130,6 +130,7 @@ class MultiAgentAlgorithm(ABC):
         self.agent_goals = [None for agent in self.agents]  # goal location for each agent
         self.agent_callbacks = {AgentEvent.TASK_COMPLETED: self.agent_move_completed_callback}
         self.agent_routing_state = [None for agent in self.agents]
+        self.agent_max_distance = [1000 for agent in self.agents]
 
     @abstractmethod
     def run_time_step(self) -> None:
@@ -147,6 +148,15 @@ class MultiAgentAlgorithm(ABC):
         :param agent_id: the agent id
         :param target: (x, y) tuple of the target location
         :return: None
+        """
+        pass
+
+    @abstractmethod
+    def is_locked(self) -> bool:
+        """
+        checks if all agents cannot route because they have moved to block themselves. This is an abstract method
+        that must be implemented by child classes
+        :return: boolean
         """
         pass
 
@@ -296,14 +306,3 @@ class MultiAgentAlgorithm(ABC):
         # set the last square as an agent target square
         self.arena.set_agent_target(x_tiles[-1], y_tiles[-1])
         return x_tiles, y_tiles
-
-    def is_locked(self) -> bool:
-        """
-        checks if all agents cannot route because they have moved to block themselves
-        :return: boolean
-        """
-        blocked = True
-        for idx, agent in enumerate(self.agents):
-            if agent.state != AgentState.IDLE:
-                blocked = False
-        return blocked

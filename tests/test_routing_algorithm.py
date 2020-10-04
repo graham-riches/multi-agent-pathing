@@ -65,6 +65,9 @@ class MultiAgentAlgorithmMock(MultiAgentAlgorithm):
     def route(self, agent_id: int, location: tuple) -> None:
         pass
 
+    def is_locked(self) -> bool:
+        return False
+
 
 class TestMultiAgentAlgorithm(unittest.TestCase):
     def setUp(self):

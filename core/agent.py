@@ -261,18 +261,9 @@ class Agent:
         self._current_time_step = 0
         self._motion_profile = AgentMotionProfile()  # use default motion parameters
         self._current_direction = None
-        self._max_distance = max_distance
         # function callbacks for task handling
         self._callbacks = {AgentTasks.MOVE: self.start_move,
                            AgentTasks.UPDATE_MOTION_PARAMETERS: self.set_kinematic_parameters}
-
-    @property
-    def max_distance(self) -> int:
-        return int(self._max_distance)
-
-    @max_distance.setter
-    def max_distance(self, max_distance: int) -> None:
-        self._max_distance = int(max_distance)
 
     def is_location_updated(self) -> bool:
         return self._location_updated

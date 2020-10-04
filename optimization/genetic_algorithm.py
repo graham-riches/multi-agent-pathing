@@ -57,25 +57,10 @@ UPDATE: October 3, 2020
 
 from __future__ import division
 import numpy as np
-import time
 import os
 import random as rd
 import matplotlib.pylab as plt
-import sys
 from optimization.kursawe import get_kursawe_fitness
-
-
-class Parameter:
-    def __init__(self, lower_limit: float, upper_limit: float, is_integer: bool) -> None:
-        """
-        Parameter type for multi-objective genetic algorithm
-        :param lower_limit: the parameters lower bound
-        :param upper_limit: parameters upped bound
-        :param is_integer: cast value to integer?
-        """
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
-        self.is_int = is_integer
 
 
 class MultiObjectiveGeneticAlgorithm:
@@ -88,7 +73,7 @@ class MultiObjectiveGeneticAlgorithm:
         onto the end of the parameters list in the array. This makes it trivial-ish and relatively fast to sort the
         population by its fitness ranking and whatnot. So beware of that ¯\_(ツ)_/¯
 
-        :param parameters: list of Parameter objects. These have bounded ranges and type specification. NOTE:
+        :param parameters: list of tuples. These are structured as (lower_limit, upper_limit, is_integer). NOTE:
                            parameters should have a length that is equal to a multiple of 2
         :param population_size: total size of the GA population to create
         :param generations_to_run: how many generations to run
@@ -99,9 +84,9 @@ class MultiObjectiveGeneticAlgorithm:
         # individuals and parameters
         self._total_parameters = len(parameters)
         self._individual_size = self._total_parameters + 4  # NOTE: this is to store [f1, f2, R, d] as part of 2D array
-        self._parameter_upper_bounds = [parameter.upper_limit for parameter in parameters]
-        self._parameter_lower_bounds = [parameter.lower_limit for parameter in parameters]
-        self._parameter_is_integer = [parameter.is_int for parameter in parameters]
+        self._parameter_upper_bounds = [parameter[1] for parameter in parameters]
+        self._parameter_lower_bounds = [parameter[0] for parameter in parameters]
+        self._parameter_is_integer = [parameter[2] for parameter in parameters]
         self._f1_index = self._total_parameters
         self._f2_index = self._total_parameters + 1
         self._rank_index = self._total_parameters + 2
@@ -125,10 +110,53 @@ class MultiObjectiveGeneticAlgorithm:
         self._maximum_child_crossovers = 3  # maximum number of crossovers applied per child
 
         # debugging and data saving attributes
+        self._save_data = False
         self._filename = 'test'
         self._plots_directory = 'PLOTS'  # create if it does not exist
+        self._f1_plot_label = 'f1'
+        self._f2_plot_label = 'f2'
         if not os.path.exists(self._plots_directory):
             os.mkdir(self._plots_directory)
+
+    @property
+    def save_data(self) -> bool:
+        return self._save_data
+
+    @save_data.setter
+    def save_data(self, enable: bool) -> None:
+        self._save_data = enable
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
+    @filename.setter
+    def filename(self, filename: str) -> None:
+        self._filename = filename
+
+    @property
+    def plot_directory(self) -> str:
+        return self._plots_directory
+
+    @plot_directory.setter
+    def plot_directory(self, directory: str) -> None:
+        self._plots_directory = directory
+
+    @property
+    def fitness_one_label(self) -> str:
+        return self._f1_plot_label
+
+    @fitness_one_label.setter
+    def fitness_one_label(self, label: str) -> None:
+        self._f1_plot_label = label
+
+    @property
+    def fitness_two_label(self) -> str:
+        return self._f2_plot_label
+
+    @fitness_two_label.setter
+    def fitness_two_label(self, label: str) -> None:
+        self._f2_plot_label = label
 
     @property
     def mutation_multiplier(self) -> float:
@@ -173,14 +201,6 @@ class MultiObjectiveGeneticAlgorithm:
     @max_crossovers.setter
     def max_crossovers(self, limit: int) -> None:
         self._maximum_child_crossovers = int(limit)
-
-    @property
-    def filename(self) -> str:
-        return self._filename
-
-    @filename.setter
-    def filename(self, filename: str) -> None:
-        self._filename = filename
 
     def create_population(self) -> np.ndarray:
         """
@@ -510,8 +530,8 @@ class MultiObjectiveGeneticAlgorithm:
             index = index + num_members
             # create4 graph and plot the line
             plt.plot(f[0, :], f[1, :], linestyle='--', marker='o', label='Front: ' + str(rank))
-        plt.xlabel('f1')
-        plt.ylabel('f2')
+        plt.xlabel(self._f1_plot_label)
+        plt.ylabel(self._f2_plot_label)
         plt.title('Fitness progress, Generation: {}'.format(self._current_generation))
         plt.legend(loc=1)
         save_path = os.path.join(self._plots_directory, 'Generation{}.png'.format(self._current_generation))
@@ -588,11 +608,9 @@ class MultiObjectiveGeneticAlgorithm:
 
 if __name__ == '__main__':
     rd.seed(1)
-    parameters = [Parameter(-5, 5, False), Parameter(-5, 5, False), Parameter(-5, 5, False)]
-    population_size = 100
+    parameters = [(-5, 5, False), (-5, 5, False), (-5, 5, False)]
+    size = 100
     num_generations = 50
-    ga = MultiObjectiveGeneticAlgorithm(parameters, population_size, num_generations, get_kursawe_fitness)
+    ga = MultiObjectiveGeneticAlgorithm(parameters, size, num_generations, get_kursawe_fitness)
     ga.mutation_multiplier = 0.2
     ga.run()
-    print('Done')
-

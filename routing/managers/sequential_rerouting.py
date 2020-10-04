@@ -23,6 +23,16 @@ class SequentialRerouting(MultiAgentAlgorithm):
         self.active_agents = [False for agent in self.agents]
         self.initialized = [False for agent in self.agents]
         self._route_by_most_distant = False  # default to being greedy
+        self._detect_stalled_simulation_cycles = 15  # consecutive simulation cycles without movement default
+        self._stall_detect_count = 0
+
+    @property
+    def stall_detect_cycles(self) -> int:
+        return int(self._detect_stalled_simulation_cycles)
+
+    @stall_detect_cycles.setter
+    def stall_detect_cycles(self, cycles: int) -> None:
+        self._detect_stalled_simulation_cycles = int(cycles)
 
     @property
     def route_by_most_distant(self) -> bool:
@@ -79,10 +89,25 @@ class SequentialRerouting(MultiAgentAlgorithm):
             if route_status == RoutingStatus.SUCCESS:
                 task = self.routing_algorithm.path[0]
                 # check if the move task is less than the max length allowed and truncate if its too large
-                if task.args[1] >= agent.max_distance:
-                    task.args[1] = agent.max_distance
+                if task.args[1] >= self.agent_max_distance[agent_id]:
+                    task.args[1] = self.agent_max_distance[agent_id]
                 self.add_agent_task(agent_id, task)
                 self.start_new_task(agent_id)
+
+    def is_locked(self) -> bool:
+        """
+        Test if all agents have become locked in the simulation
+        :return: boolean true if simulation is frozen/locked up
+        """
+        blocked = True
+        for idx, agent in enumerate(self.agents):
+            if agent.state != AgentState.IDLE:
+                blocked = False
+        self._stall_detect_count = self._stall_detect_count + 1 if blocked else 0
+        if self._stall_detect_count >= self._detect_stalled_simulation_cycles:
+            return True
+        else:
+            return False
 
     def get_agents_by_distance(self) -> list:
         """

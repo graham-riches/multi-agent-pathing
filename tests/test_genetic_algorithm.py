@@ -7,7 +7,7 @@
 """
 import unittest
 import numpy as np
-from optimization.genetic_algorithm import MultiObjectiveGeneticAlgorithm, Parameter
+from optimization.genetic_algorithm import MultiObjectiveGeneticAlgorithm
 from optimization.kursawe import get_kursawe_fitness
 
 
@@ -15,7 +15,7 @@ class TestMultiObjectiveGeneticAlgorithm(unittest.TestCase):
     def setUp(self):
         self._population_size = 20
         self._generations = 10
-        parameters = [Parameter(-5, 5, False), Parameter(-5, 5, False), Parameter(-5, 5, False)]
+        parameters = [(-5, 5, False), (-5, 5, False), (-5, 5, False)]
         self._parameters = len(parameters)
         self.ga = MultiObjectiveGeneticAlgorithm(parameters, self._population_size,
                                                  self._generations, get_kursawe_fitness)

@@ -11,7 +11,6 @@ import json
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm
 from core.render_engine import Renderer
 from routing.a_star import AStar
-from routing.managers.sequential import Sequential
 from routing.managers.sequential_rerouting import SequentialRerouting
 from core.agent import *
 from core.arena import Arena
@@ -30,6 +29,8 @@ class BenchmarkRunner:
         # Benchmark simulation properties
         self._routing_algorithm = None
         self._manager_algorithm = None
+        self._on_fail_cycles = 10000
+        self._on_fail_squares = 1000
         self.time_step = None
         self.dpi = None
         self.render = False
@@ -129,7 +130,7 @@ class BenchmarkRunner:
                 self.renderer.render_agent(agent_id)
             self.renderer.update()
 
-    def run(self) -> int:
+    def run(self) -> tuple:
         """
         run the simulation and render it if requested.
         :return:  the number of cycles to complete
@@ -137,7 +138,7 @@ class BenchmarkRunner:
         cycles = 0
         total_distance = 0
         if (self._manager_algorithm is None) and (self._routing_algorithm is None):
-            return cycles
+            return cycles, total_distance
 
         # set the goal locations in the multi-agent algorithm
         for task in self.tasks:
@@ -149,20 +150,13 @@ class BenchmarkRunner:
 
         # initialize the simulation and run until complete
         self._manager_algorithm.initialize()
-        blocked_count = 0
         while not self._manager_algorithm.is_simulation_complete():
             self._manager_algorithm.run_time_step()
             self.render_simulation()
             cycles += 1
+            # check for a grid lock and return if the simulation is stalled
             if self._manager_algorithm.is_locked():
-                blocked_count += 1
-                if blocked_count > 15:
-                    # TODO: fix this hacky garbage
-                    cycles = 100000
-                    total_distance = 1000
-                    return cycles, total_distance
-            else:
-                blocked_count = 0
+                return self._on_fail_cycles, self._on_fail_squares
 
         # calculate the total simulation distance
         for agent in self.agents:
@@ -179,12 +173,12 @@ if __name__ == '__main__':
     runner.load_configuration()
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
-    a_star.inline_factor = 0.23384987
-    a_star.turn_factor = 3.67849007
+    a_star.inline_factor = 1.58479514
+    a_star.turn_factor = 0.08078503
     runner.algorithm = a_star
     routing_manager = SequentialRerouting(runner.arena, runner.agents, runner.algorithm)
+    routing_manager.agent_max_distance = [3, 8, 8, 5, 4, 6, 7, 8, 9, 2]
     routing_manager.route_by_most_distant = False
     runner.routing_manager = routing_manager
-    run_cycles, total_distance = runner.run()
+    run_cycles, distance = runner.run()
     print('BENCHMARK: Simulation cycles {}'.format(run_cycles))
-
