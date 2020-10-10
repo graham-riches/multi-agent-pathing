@@ -10,14 +10,16 @@ from core.arena import Arena
 from core.agent import *
 from routing.a_star import AStar, AStarNode
 from routing.status import RoutingStatus
+from routing.biased_grid import BiasedGrid, BiasedDirection
 
 
 class TestAStar(unittest.TestCase):
     def setUp(self):
         time_step = 0.005
         self.arena = Arena(10, 10)
+        self.biased_grid = BiasedGrid(self.arena.get_dimensions())
         self.agents = [Agent(0, 0, time_step), Agent(1, 1, time_step)]
-        self.a_star = AStar(self.arena, self.agents)
+        self.a_star = AStar(self.arena, self.agents, self.biased_grid)
 
     def test_a_star_init(self):
         self.assertEqual(self.arena, self.a_star.arena)
@@ -142,3 +144,18 @@ class TestAStar(unittest.TestCase):
         node = AStarNode((1, 3))
         score = self.a_star.calculate_inline_cost(node)
         self.assertEqual(10, score)
+
+    def test_is_direction_valid(self):
+        parents = [(1, 1), (1, 1), (1, 1), (1, 1)]
+        children = [(2, 1), (0, 1), (1, 2), (1, 0)]
+        biases = [BiasedDirection.ONLY_X_POSITIVE, BiasedDirection.ONLY_X_NEGATIVE,
+                  BiasedDirection.ONLY_Y_POSITIVE, BiasedDirection.ONLY_Y_NEGATIVE]
+        for idx in range(len(parents)):
+            parent = parents[idx]
+            child = children[idx]
+            bias = biases[idx]
+            self.biased_grid[child] = bias
+            self.biased_grid[parent] = bias
+            self.assertTrue(self.a_star.is_direction_valid(parent, child))
+            self.assertFalse(self.a_star.is_direction_valid(child, parent))
+

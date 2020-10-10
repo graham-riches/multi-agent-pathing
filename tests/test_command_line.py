@@ -8,6 +8,7 @@
 import unittest
 from core.command_line import CommandLine
 from routing.a_star import AStar
+from routing.biased_grid import BiasedGrid
 from core.tile import TileState
 from core.agent import Agent
 from core.arena import Arena
@@ -18,7 +19,8 @@ class TestCommandLine(unittest.TestCase):
         time_step = 0.05
         self.agents = [Agent(0, 0, time_step)]
         self.arena = Arena(10, 20)
-        self.algorithm = AStar(self.arena, self.agents)
+        self.biased_grid = BiasedGrid(self.arena.get_dimensions())
+        self.algorithm = AStar(self.arena, self.agents, self.biased_grid)
         self.cli = CommandLine(self.arena, self.agents)
 
     def test_help(self):

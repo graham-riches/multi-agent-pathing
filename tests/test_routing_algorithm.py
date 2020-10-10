@@ -8,6 +8,7 @@
 import unittest
 from routing.status import RoutingStatus
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm, Node
+from routing.biased_grid import BiasedGrid
 from core.arena import Arena
 from core.agent import *
 from core.tile import TileState
@@ -24,13 +25,13 @@ class NodeMock(Node):
 
 
 class SingleAgentAlgorithmMock(SingleAgentAlgorithm):
-    def __init__(self, arena: Arena, agents: list) -> None:
+    def __init__(self, arena: Arena, agents: list, biased_grid: BiasedGrid) -> None:
         """
         creates a mock algorithm class for testing
         :param arena: the sim arena
         :param agents: sim agents
         """
-        super(SingleAgentAlgorithmMock, self).__init__(arena, agents)
+        super(SingleAgentAlgorithmMock, self).__init__(arena, agents, biased_grid)
 
     def route(self, agent: Agent, target: tuple) -> RoutingStatus:
         """
@@ -73,8 +74,9 @@ class TestMultiAgentAlgorithm(unittest.TestCase):
     def setUp(self):
         time_step = 0.005
         self.arena = Arena(10, 10)
+        self.biased_grid = BiasedGrid(self.arena.get_dimensions())
         self.agents = [Agent(0, 0, time_step), Agent(5, 5, time_step)]
-        self.algorithm = SingleAgentAlgorithmMock(self.arena, self.agents)
+        self.algorithm = SingleAgentAlgorithmMock(self.arena, self.agents, self.biased_grid)
         self.routing_manager = MultiAgentAlgorithmMock(self.arena, self.agents, self.algorithm)
 
     def tearDown(self):
@@ -149,8 +151,9 @@ class TestSingleAgentAlgorithm(unittest.TestCase):
     def setUp(self):
         time_step = 0.005
         self.arena = Arena(10, 10)
+        self.biased_grid = BiasedGrid(self.arena.get_dimensions())
         self.agents = [Agent(0, 0, time_step), Agent(1, 1, time_step)]
-        self.algorithm = SingleAgentAlgorithmMock(self.arena, self.agents)
+        self.algorithm = SingleAgentAlgorithmMock(self.arena, self.agents, self.biased_grid)
 
     def tearDown(self):
         pass

@@ -11,6 +11,7 @@ from core.agent_colors import COLORS
 from core.arena import Arena
 from core.tile import TileState
 from routing.routing_algorithm import MultiAgentAlgorithm
+from routing.biased_grid import BiasedGrid, BiasedDirection
 
 
 # pygame buttons
@@ -19,7 +20,7 @@ RIGHT = 3
 
 
 class Renderer:
-    def __init__(self, arena: Arena, agents: list, routing_manager: MultiAgentAlgorithm,
+    def __init__(self, arena: Arena, agents: list, routing_manager: MultiAgentAlgorithm, biased_grid: BiasedGrid,
                  timestep: float, dpi_scaling: int = 40) -> None:
         """
         Create a new canvas for rendering the simulation. The base canvas is based on an Arena object,
@@ -27,6 +28,7 @@ class Renderer:
         :param: arena: the arena object
         :param: agents: list of agents
         :param: routing_manager: routing manager object
+        :param: biased_grid: biased grid for routing only in certain directions
         :param: timestep: the animation timestep in seconds
         :param: dpi_scaling: the dpi scaling to use for one grid square
         :return:
@@ -47,12 +49,14 @@ class Renderer:
         self.arena = arena
         self.agents = agents
         self.routing_manager = routing_manager
+        self.biased_grid = biased_grid
         self.agent_selected = None
 
         # dict of color keys
         self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'tile_reserved': (60, 60, 60),
                             'tile_target': (200, 135, 135), 'grid_lines': (255, 255, 255), 'agent': COLORS,
-                            'agent_selected': (245, 100, 90), 'agent_border': (0, 0, 0)}
+                            'agent_selected': (245, 100, 90), 'agent_border': (0, 0, 0), 'soft_bias': (120, 120, 200),
+                            'hard_bias': (0, 0, 0)}
         self.total_elements = len(self.colors_dict)
 
     def render_arena(self) -> None:
@@ -62,7 +66,7 @@ class Renderer:
         """
         for x in range(self.x_size):
             for y in range(self.y_size):
-                y_pos = y*self.dpi
+                y_pos = y * self.dpi
                 x_pos = x * self.dpi
                 if self.arena.get_tile_state(x, y) == TileState.FREE:
                     color = self.colors_dict['tile_free']
@@ -77,6 +81,41 @@ class Renderer:
                 pygame.draw.rect(self.screen, color, rect_location)
                 # draw the grid rectangles
                 pygame.draw.rect(self.screen, self.colors_dict['grid_lines'], rect_location, 1)
+                # draw the direction bias
+                bias = self.biased_grid[int(x), int(y)]
+                if bias != BiasedDirection.BIAS_NONE:
+                    self.render_direction_bias(int(x), int(y), bias)
+
+    def render_direction_bias(self, x: int, y: int, bias: BiasedDirection) -> None:
+        """
+        render direction bias arrow
+        :param x: x grid location
+        :param y: y grid location
+        :param bias: the bias direction
+        :return: None
+        """
+        # TODO I implemented this like absolute garbage! Fix it!
+        # corner locations in pixels
+        corners = [(x * self.dpi, y * self.dpi), (x * self.dpi + self.dpi, y * self.dpi),
+                   (x * self.dpi + self.dpi, y * self.dpi + self.dpi), (x * self.dpi, y * self.dpi + self.dpi)]
+        # center locations in pixels
+        centers = [(x * self.dpi + int(self.dpi/2), y * self.dpi),
+                   (x * self.dpi + self.dpi, y * self.dpi + int(self.dpi/2)),
+                   (x * self.dpi + int(self.dpi/2), y * self.dpi + self.dpi),
+                   (x * self.dpi, y * self.dpi + int(self.dpi/2))]
+
+        # set the color and get the vertices
+        color = self.colors_dict['hard_bias'] if bias >= BiasedDirection.ONLY_X_POSITIVE else self.colors_dict['soft_bias']
+        vertices = list()
+        if bias == BiasedDirection.ONLY_Y_POSITIVE or bias == BiasedDirection.BIAS_Y_POSITIVE:
+            vertices = [corners[0], corners[1], centers[2]]
+        elif bias == BiasedDirection.ONLY_Y_NEGATIVE or bias == BiasedDirection.BIAS_Y_NEGATIVE:
+            vertices = [corners[0], corners[1], centers[2]]
+        elif bias == BiasedDirection.ONLY_X_POSITIVE or bias == BiasedDirection.BIAS_X_POSITIVE:
+            vertices = [corners[0], corners[1], centers[2]]
+        elif bias == BiasedDirection.ONLY_X_NEGATIVE or bias == BiasedDirection.BIAS_X_NEGATIVE:
+            vertices = [corners[0], corners[1], centers[2]]
+        pygame.draw.polygon(self.screen, color, vertices, 2)
 
     def render_agent(self, agent_id: int) -> None:
         """

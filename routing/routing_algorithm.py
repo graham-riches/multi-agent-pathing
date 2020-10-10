@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from core.arena import Arena
 from core.agent import *
 from routing.status import RoutingStatus
+from routing.biased_grid import BiasedGrid
 
 
 class Node(ABC):
@@ -27,15 +28,17 @@ class Node(ABC):
 
 class SingleAgentAlgorithm(ABC):
     @abstractmethod
-    def __init__(self, arena: Arena, agents: list) -> None:
+    def __init__(self, arena: Arena, agents: list, biased_grid: BiasedGrid) -> None:
         """
         Initialize a routing algorithm with the Arena and a list of agents. This finds an "optimal" path to
         a goal for a single agent using whatever means the child class chooses.
         :param arena: the arena for the simulation
         :param agents: the list of all simulation agents
+        :param biased_grid: 2D array of preferred routing directions for each grid location
         """
         self.arena = arena
         self.agents = agents
+        self.biased_grid = biased_grid
         self.node_path = list()  # contains all the nodes that are part of a target route
         self.path = list()  # contains a list of agent tasks to create the route
 
@@ -168,7 +171,7 @@ class MultiAgentAlgorithm(ABC):
         """
         for agent_id, agent in enumerate(self.agents):
             goals = self.agent_goals[agent_id]
-            if goals is not None:
+            if goals is not None and len(goals) > 0:
                 first_goal = goals[0]
                 self.route(agent_id, first_goal)
         self.initialized = True

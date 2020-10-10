@@ -6,7 +6,8 @@
 	},
 	"arena_properties": {
 		"size": [10, 10],
-		"blockages": []
+		"blockages": [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 9]],
+		"biases": [[0, 5, 7], [0, 6, 7], [0, 7, 7], [0, 8, 7]]
 	},
 	"agents": [{
 			"id": 0,
@@ -49,35 +50,35 @@
 			"task_id": "route",
 			"task_parameters": {
 				"agent_id": 0,
-				"location": [[9, 9], [0, 5], [0, 9], [9, 9]]
+				"location": [[9, 9], [0, 5], [0, 8], [9, 9]]
 			}
 		},
 		{
 			"task_id": "route",
 			"task_parameters": {
 				"agent_id": 1,
-				"location": [[7, 7], [0, 5], [0, 9], [7, 7]]
+				"location": [[7, 7], [0, 5], [0, 8], [7, 7]]
 			}
 		},
 		{
 			"task_id": "route",
 			"task_parameters": {
 				"agent_id": 2,
-				"location": [[5, 5], [0, 5], [0, 9], [5, 5]]
+				"location": [[5, 5], [0, 5], [0, 8], [5, 5]]
 			}
 		},
 		{
 			"task_id": "route",
 			"task_parameters": {
 				"agent_id": 3,
-				"location": [[3, 3], [0, 5], [0, 9], [3, 3]]
+				"location": [[3, 3], [0, 5], [0, 8], [3, 3]]
 			}
 		},
 		{
 			"task_id": "route",
 			"task_parameters": {
 				"agent_id": 4,
-				"location": [[1, 1], [0, 5], [0, 9], [1, 1]]
+				"location": [[1, 1], [0, 5], [0, 8], [1, 1]]
 			}
 		}
 	]

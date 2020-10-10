@@ -6,12 +6,14 @@
         Loads a simulation benchmark file and runs the simulation for a given algorithm.
    
 """
+import numpy as np
 import sys
 import json
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm
 from core.render_engine import Renderer
 from routing.a_star import AStar
 from routing.managers.sequential_rerouting import SequentialRerouting
+from routing.biased_grid import BiasedGrid, BiasedDirection
 from core.agent import *
 from core.arena import Arena
 
@@ -35,6 +37,7 @@ class BenchmarkRunner:
         self.dpi = None
         self.render = False
         self.renderer = None
+        self.biased_grid = None
         self.routing_manager = None
         self.agents = None
         self.arena = None
@@ -97,6 +100,10 @@ class BenchmarkRunner:
         for blockage in blockages:
             sim_arena.set_blockage([blockage[0]], [blockage[1]])
         self.arena = sim_arena
+        self.biased_grid = BiasedGrid(self.arena.get_dimensions())
+        biased_squares = arena['biases']
+        for bias in biased_squares:
+            self.biased_grid[bias[0], bias[1]] = bias[2]
 
     def parse_tasks(self) -> None:
         """
@@ -117,7 +124,8 @@ class BenchmarkRunner:
         self.parse_tasks()
         # create the renderer if required
         if self.render:
-            self.renderer = Renderer(self.arena, self.agents, self.routing_manager, self.time_step, self.dpi)
+            self.renderer = Renderer(self.arena, self.agents, self.routing_manager,
+                                     self.biased_grid, self.time_step, self.dpi)
 
     def render_simulation(self) -> None:
         """
@@ -173,7 +181,7 @@ if __name__ == '__main__':
     runner = BenchmarkRunner(config_file)
     runner.load_configuration()
     # create a new algorithm and attach it to the simulation
-    a_star = AStar(runner.arena, runner.agents)
+    a_star = AStar(runner.arena, runner.agents, runner.biased_grid)
     runner.algorithm = a_star
     routing_manager = SequentialRerouting(runner.arena, runner.agents, runner.algorithm)
     routing_manager.route_by_most_distant = False

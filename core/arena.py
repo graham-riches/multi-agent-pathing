@@ -136,35 +136,35 @@ class Arena:
         if x_is_edge and y_is_edge:
             # add the two closest nodes
             if x_location == 0:
-                node_1 = (x_location + 1, y_location)
-                node_2 = (x_location, y_location + 1) if y_location == 0 else (x_location, y_location - 1)
+                node_1 = (int(x_location + 1), int(y_location))
+                node_2 = (int(x_location), int(y_location + 1)) if y_location == 0 else (int(x_location), int(y_location - 1))
             else:
-                node_1 = (x_location - 1, y_location)
-                node_2 = (x_location, y_location + 1) if y_location == 0 else (x_location, y_location - 1)
+                node_1 = (int(x_location - 1), int(y_location))
+                node_2 = (int(x_location), int(y_location + 1)) if y_location == 0 else (int(x_location), int(y_location - 1))
             neighbours.append(node_1)
             neighbours.append(node_2)
         elif x_is_edge and not y_is_edge:
             # add the upper and lower neighbours
-            neighbours.append((x_location, y_location + 1))
-            neighbours.append((x_location, y_location - 1))
+            neighbours.append((int(x_location), int(y_location + 1)))
+            neighbours.append((int(x_location), int(y_location - 1)))
             # add the internal neighbour
             if x_location == 0:
-                neighbours.append((x_location + 1, y_location))
+                neighbours.append((int(x_location + 1), int(y_location)))
             else:
-                neighbours.append((x_location - 1, y_location))
+                neighbours.append((int(x_location - 1), int(y_location)))
         elif y_is_edge and not x_is_edge:
             # add the upper and lower neighbours
-            neighbours.append((x_location + 1, y_location))
-            neighbours.append((x_location - 1, y_location))
+            neighbours.append((int(x_location + 1), int(y_location)))
+            neighbours.append((int(x_location - 1), int(y_location)))
             # add the internal neighbour
             if y_location == 0:
-                neighbours.append((x_location, y_location + 1))
+                neighbours.append((int(x_location), int(y_location + 1)))
             else:
-                neighbours.append((x_location, y_location - 1))
+                neighbours.append((int(x_location), int(y_location - 1)))
         else:
             # add all surrounding nodes
-            neighbours.append((x_location - 1, y_location))
-            neighbours.append((x_location + 1, y_location))
-            neighbours.append((x_location, y_location - 1))
-            neighbours.append((x_location, y_location + 1))
+            neighbours.append((int(x_location - 1), int(y_location)))
+            neighbours.append((int(x_location + 1), int(y_location)))
+            neighbours.append((int(x_location), int(y_location - 1)))
+            neighbours.append((int(x_location), int(y_location + 1)))
         return neighbours

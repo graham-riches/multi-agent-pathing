@@ -13,9 +13,8 @@ from core.arena import Arena
 from core.agent import Agent, AgentCoordinates
 from routing.routing_algorithm import SingleAgentAlgorithm, Node
 from routing.status import RoutingStatus
+from routing.biased_grid import BiasedGrid, BiasedDirection
 from core.tile import TileState
-
-TRAVELLED_COST_INITIAL = 1000000
 
 
 class AStarNode(Node):
@@ -37,6 +36,10 @@ class AStarNode(Node):
 
     @property
     def travelled_cost(self) -> float:
+        """
+        the cost associated with the total distance travelled
+        :return:
+        """
         return self._travelled_cost
 
     @travelled_cost.setter
@@ -46,6 +49,10 @@ class AStarNode(Node):
 
     @property
     def heuristic_cost(self) -> float:
+        """
+        the heuristic cost, which is roughly the geometric distance to the goal
+        :return:
+        """
         return self._heuristic_cost
 
     @heuristic_cost.setter
@@ -55,6 +62,10 @@ class AStarNode(Node):
 
     @property
     def turn_cost(self) -> float:
+        """
+        the cost associated with making a turn
+        :return:
+        """
         return self._turn_cost
 
     @turn_cost.setter
@@ -64,6 +75,10 @@ class AStarNode(Node):
 
     @property
     def inline_cost(self) -> float:
+        """
+        the cost associated with being inline with another agent
+        :return:
+        """
         return self._inline_cost
 
     @inline_cost.setter
@@ -87,26 +102,28 @@ class AStarNode(Node):
 
 
 class AStar(SingleAgentAlgorithm):
-    def __init__(self, arena: Arena, agents: list) -> None:
+    def __init__(self, arena: Arena, agents: list, biased_grid: BiasedGrid) -> None:
         """
         Initialize an A* search object given a particular arena and a list of agents. Agent locations are considered
         as blockages that must be handled in the search
         """
-        self.arena = arena
-        self.agents = agents
-
         # initialize parent class
-        super(AStar, self).__init__(self.arena, self.agents)
+        super(AStar, self).__init__(arena, agents, biased_grid)
         # initialize routing components
         self.start = None
         self.target = None
         self.came_from = None
         self._turn_factor = 0
         self._inline_factor = 0
+        self._bias_factor = 0
         self.reset()
 
     @property
     def turn_factor(self) -> float:
+        """
+        get the penalty cost associated with making a turn
+        :return:
+        """
         return self._turn_factor
 
     @turn_factor.setter
@@ -115,11 +132,27 @@ class AStar(SingleAgentAlgorithm):
 
     @property
     def inline_factor(self) -> float:
+        """
+        Get the penalty cost associated with being in-line with another agent
+        :return:
+        """
         return self._inline_factor
 
     @inline_factor.setter
     def inline_factor(self, factor: float) -> None:
         self._inline_factor = factor
+
+    @property
+    def bias_factor(self) -> float:
+        """
+        get the penalty associated with moving across a square against its preferred direction
+        :return:
+        """
+        return self._bias_factor
+
+    @bias_factor.setter
+    def bias_factor(self, bias: float) -> None:
+        self._bias_factor = bias
 
     def reset(self) -> None:
         """
@@ -127,7 +160,7 @@ class AStar(SingleAgentAlgorithm):
         :return:
         """
         # re-initialize the algorithm parent class
-        super(AStar, self).__init__(self.arena, self.agents)
+        super(AStar, self).__init__(self.arena, self.agents, self.biased_grid)
         self.start = None
         self.target = None
         self.came_from = None
@@ -280,9 +313,10 @@ class AStar(SingleAgentAlgorithm):
             # create a node
             new_node = AStarNode(neighbour, parent=parent)
             new_node.travelled_cost = parent.travelled_cost + 1
-            # if the tile is free, add it to the set
+            # if the tile is free and routing is allowed in that direction, add it to the list
+            route_direction_valid = self.is_direction_valid(parent.location, neighbour)
             tile_state = self.arena.get_tile_state(neighbour[0], neighbour[1])
-            if tile_state == TileState.FREE and neighbour not in agent_locations:
+            if tile_state == TileState.FREE and route_direction_valid and neighbour not in agent_locations:
                 new_nodes.append(new_node)
         return new_nodes
 
@@ -316,3 +350,30 @@ class AStar(SingleAgentAlgorithm):
         else:
             return RoutingStatus.SUCCESS
 
+    def is_direction_valid(self, parent: tuple, child: tuple) -> bool:
+        """
+        check if routing in a specific direction is allowed based on the biased grid
+        :param parent: the parent location tuple
+        :param child: the child location tuple
+        :return: true if route is valid
+        """
+        bias = self.biased_grid[child]
+        if bias < BiasedDirection.ONLY_X_POSITIVE:
+            return True
+
+        if child[0] == parent[0]:
+            # routing in Y
+            if bias == BiasedDirection.ONLY_X_POSITIVE or bias == BiasedDirection.ONLY_X_NEGATIVE:
+                return True
+            elif bias == BiasedDirection.ONLY_Y_NEGATIVE:
+                return child[1] < parent[1]
+            elif bias == BiasedDirection.ONLY_Y_POSITIVE:
+                return child[1] > parent[1]
+        else:
+            # routing in X
+            if bias == BiasedDirection.ONLY_Y_NEGATIVE or bias == BiasedDirection.ONLY_Y_POSITIVE:
+                return True
+            elif bias == BiasedDirection.ONLY_X_POSITIVE:
+                return child[0] > parent[0]
+            elif bias == BiasedDirection.ONLY_X_NEGATIVE:
+                return child[0] < parent[0]
