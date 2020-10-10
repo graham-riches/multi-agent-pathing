@@ -2,44 +2,44 @@
 	"simulation_properties": {
 		"timestep": 0.005,
 		"grid_dpi": 40,
-		"render": true
+		"render": false
 	},
 	"arena_properties": {
 		"size": [10, 10],
 		"blockages": [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 9]],
-		"biases": [[0, 5, 7], [0, 6, 7], [0, 7, 7], [0, 8, 7]]
+		"biases": [[0, 5, 6], [0, 6, 7], [0, 7, 7], [0, 8, 7]]
 	},
 	"agents": [{
 			"id": 0,
-			"location": [2, 2],
+			"location": [9, 9],
 			"acceleration": 2.0,
 			"deceleration": 3.0,
 			"velocity": 4.0
 		},
 		{
 			"id": 1,
-			"location": [3, 3],
+			"location": [7, 7],
 			"acceleration": 2.0,
 			"deceleration": 3.0,
 			"velocity": 4.0
 		},
 		{
 			"id": 2,
-			"location": [4, 4],
-			"acceleration": 2.0,
-			"deceleration": 3.0,
-			"velocity": 4.0
-		},
-		{
-			"id": 3,
 			"location": [5, 5],
 			"acceleration": 2.0,
 			"deceleration": 3.0,
 			"velocity": 4.0
 		},
 		{
+			"id": 3,
+			"location": [3, 3],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
 			"id": 4,
-			"location": [6, 6],
+			"location": [1, 1],
 			"acceleration": 2.0,
 			"deceleration": 3.0,
 			"velocity": 4.0

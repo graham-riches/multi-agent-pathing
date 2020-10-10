@@ -51,13 +51,26 @@ class Renderer:
         self.routing_manager = routing_manager
         self.biased_grid = biased_grid
         self.agent_selected = None
+        self._render_directions = True
 
         # dict of color keys
         self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'tile_reserved': (60, 60, 60),
                             'tile_target': (200, 135, 135), 'grid_lines': (255, 255, 255), 'agent': COLORS,
-                            'agent_selected': (245, 100, 90), 'agent_border': (0, 0, 0), 'soft_bias': (120, 120, 200),
-                            'hard_bias': (0, 0, 0)}
+                            'agent_selected': (245, 100, 90), 'agent_border': (0, 0, 0), 'soft_bias': (225, 225, 225),
+                            'hard_bias': (200, 80, 80)}
         self.total_elements = len(self.colors_dict)
+
+    @property
+    def render_directions(self) -> bool:
+        """
+        enable rendering simulation preferred directions
+        :return:
+        """
+        return self._render_directions
+
+    @render_directions.setter
+    def render_directions(self, enable: bool) -> None:
+        self._render_directions = enable
 
     def render_arena(self) -> None:
         """
@@ -79,12 +92,13 @@ class Renderer:
                 # draw the tile
                 rect_location = (x_pos, y_pos, self.dpi, self.dpi)
                 pygame.draw.rect(self.screen, color, rect_location)
+                # draw the direction bias
+                if self._render_directions:
+                    bias = self.biased_grid[int(x), int(y)]
+                    if bias >= BiasedDirection.ONLY_X_POSITIVE:
+                        self.render_direction_bias(int(x), int(y), bias)
                 # draw the grid rectangles
                 pygame.draw.rect(self.screen, self.colors_dict['grid_lines'], rect_location, 1)
-                # draw the direction bias
-                bias = self.biased_grid[int(x), int(y)]
-                if bias != BiasedDirection.BIAS_NONE:
-                    self.render_direction_bias(int(x), int(y), bias)
 
     def render_direction_bias(self, x: int, y: int, bias: BiasedDirection) -> None:
         """
@@ -110,12 +124,12 @@ class Renderer:
         if bias == BiasedDirection.ONLY_Y_POSITIVE or bias == BiasedDirection.BIAS_Y_POSITIVE:
             vertices = [corners[0], corners[1], centers[2]]
         elif bias == BiasedDirection.ONLY_Y_NEGATIVE or bias == BiasedDirection.BIAS_Y_NEGATIVE:
-            vertices = [corners[0], corners[1], centers[2]]
+            vertices = [corners[2], corners[3], centers[0]]
         elif bias == BiasedDirection.ONLY_X_POSITIVE or bias == BiasedDirection.BIAS_X_POSITIVE:
-            vertices = [corners[0], corners[1], centers[2]]
+            vertices = [corners[0], corners[3], centers[1]]
         elif bias == BiasedDirection.ONLY_X_NEGATIVE or bias == BiasedDirection.BIAS_X_NEGATIVE:
-            vertices = [corners[0], corners[1], centers[2]]
-        pygame.draw.polygon(self.screen, color, vertices, 2)
+            vertices = [corners[1], corners[2], centers[3]]
+        pygame.draw.polygon(self.screen, color, vertices)
 
     def render_agent(self, agent_id: int) -> None:
         """

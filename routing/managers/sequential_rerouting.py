@@ -95,8 +95,9 @@ class SequentialRerouting(MultiAgentAlgorithm):
             if route_status == RoutingStatus.SUCCESS:
                 task = self.routing_algorithm.path[0]
                 # check if the move task is less than the max length allowed and truncate if its too large
-                if task.args[1] >= self.agent_max_distance[agent_id]:
-                    task.args[1] = self.agent_max_distance[agent_id]
+                direction = np.sign(task.args[1])
+                if abs(task.args[1]) >= self.agent_max_distance[agent_id]:
+                    task.args[1] = self.agent_max_distance[agent_id] * direction
                 self.add_agent_task(agent_id, task)
                 self.start_new_task(agent_id)
 

@@ -148,14 +148,19 @@ class TestAStar(unittest.TestCase):
     def test_is_direction_valid(self):
         parents = [(1, 1), (1, 1), (1, 1), (1, 1)]
         children = [(2, 1), (0, 1), (1, 2), (1, 0)]
-        biases = [BiasedDirection.ONLY_X_POSITIVE, BiasedDirection.ONLY_X_NEGATIVE,
-                  BiasedDirection.ONLY_Y_POSITIVE, BiasedDirection.ONLY_Y_NEGATIVE]
+        main_biases = [BiasedDirection.ONLY_X_POSITIVE, BiasedDirection.ONLY_X_NEGATIVE,
+                       BiasedDirection.ONLY_Y_POSITIVE, BiasedDirection.ONLY_Y_NEGATIVE]
+        secondary_biases = [BiasedDirection.ONLY_Y_POSITIVE, BiasedDirection.ONLY_Y_NEGATIVE,
+                            BiasedDirection.ONLY_X_POSITIVE, BiasedDirection.ONLY_X_NEGATIVE]
         for idx in range(len(parents)):
             parent = parents[idx]
             child = children[idx]
-            bias = biases[idx]
+            bias = main_biases[idx]
             self.biased_grid[child] = bias
             self.biased_grid[parent] = bias
             self.assertTrue(self.a_star.is_direction_valid(parent, child))
             self.assertFalse(self.a_star.is_direction_valid(child, parent))
-
+            bias = secondary_biases[idx]
+            self.biased_grid[child] = bias
+            self.biased_grid[parent] = bias
+            self.assertFalse(self.a_star.is_direction_valid(parent, child))

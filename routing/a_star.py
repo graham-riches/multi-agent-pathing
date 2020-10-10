@@ -33,6 +33,7 @@ class AStarNode(Node):
         self._heuristic_cost = 0  # penalize being far from the goal
         self._turn_cost = 0  # penalize turning or changing directions
         self._inline_cost = 0  # penalize being inline with another agent
+        self._biased_cost = 0  # penalize routing through a square with a preferred direction
 
     @property
     def travelled_cost(self) -> float:
@@ -86,12 +87,26 @@ class AStarNode(Node):
         self._inline_cost = cost
         self.calculate_total_cost()
 
+    @property
+    def biased_cost(self) -> float:
+        """
+        the cost associated with routing through a square with a preferred direction
+        :return:
+        """
+        return self._biased_cost
+
+    @biased_cost.setter
+    def biased_cost(self, cost: float) -> None:
+        self._biased_cost = cost
+        self.calculate_total_cost()
+
     def calculate_total_cost(self) -> None:
         """
         Calculate the total routing cost for a node
         :return:
         """
-        self.total_cost = self._heuristic_cost + self._travelled_cost + self._turn_cost + self._inline_cost
+        self.total_cost = self._heuristic_cost + self._travelled_cost + \
+                          self._turn_cost + self._inline_cost + self._biased_cost
 
     def __eq__(self, other) -> bool:
         """
@@ -208,8 +223,12 @@ class AStar(SingleAgentAlgorithm):
             for neighbour in neighbours:
                 # calculate the node costs
                 neighbour.heuristic_cost = self.calculate_heuristic_cost(neighbour, self.target)
-                neighbour.turn_cost = self.calculate_turn_cost(neighbour)
-                neighbour.inline_cost = self.calculate_inline_cost(neighbour)
+                if self._turn_factor:
+                    neighbour.turn_cost = self.calculate_turn_cost(neighbour)
+                if self._inline_factor:
+                    neighbour.inline_cost = self.calculate_inline_cost(neighbour)
+                if self._bias_factor:
+                    neighbour.biased_cost = self.calculate_biased_cost(neighbour)
                 # if the came from at this location is empty, the current path is guaranteed to be the most optimal
                 # path found so far
                 came_from_node = self.came_from[int(neighbour.location[0])][int(neighbour.location[1])]
@@ -277,6 +296,26 @@ class AStar(SingleAgentAlgorithm):
             if state == TileState.AGENT_TARGET:
                 return self._inline_factor
         return 0
+
+    def calculate_biased_cost(self, node: AStarNode) -> float:
+        """
+        calculate the cost of routing against the preferred direction of a square
+        :param node: the node to calculate the cost of
+        :return: cost
+        """
+        bias = self.biased_grid[node.location[0], node.location[1]]
+        cost = 0
+        if bias != BiasedDirection.BIAS_NONE:
+            parent = node.parent
+            if node.location[0] > parent.location[1]:
+                cost = self._bias_factor if bias != BiasedDirection.BIAS_X_POSITIVE else 0
+            elif node.location[0] < parent.location[1]:
+                cost = self._bias_factor if bias != BiasedDirection.BIAS_X_NEGATIVE else 0
+            elif node.location[1] > parent.location[1]:
+                cost = self._bias_factor if bias != BiasedDirection.BIAS_Y_POSITIVE else 0
+            elif node.location[1] < parent.location[1]:
+                cost = self._bias_factor if bias != BiasedDirection.BIAS_Y_NEGATIVE else 0
+        return cost
 
     def construct_node_path(self, target_node: AStarNode) -> list:
         """
@@ -364,7 +403,7 @@ class AStar(SingleAgentAlgorithm):
         if child[0] == parent[0]:
             # routing in Y
             if bias == BiasedDirection.ONLY_X_POSITIVE or bias == BiasedDirection.ONLY_X_NEGATIVE:
-                return True
+                return False
             elif bias == BiasedDirection.ONLY_Y_NEGATIVE:
                 return child[1] < parent[1]
             elif bias == BiasedDirection.ONLY_Y_POSITIVE:
@@ -372,7 +411,7 @@ class AStar(SingleAgentAlgorithm):
         else:
             # routing in X
             if bias == BiasedDirection.ONLY_Y_NEGATIVE or bias == BiasedDirection.ONLY_Y_POSITIVE:
-                return True
+                return False
             elif bias == BiasedDirection.ONLY_X_POSITIVE:
                 return child[0] > parent[0]
             elif bias == BiasedDirection.ONLY_X_NEGATIVE:

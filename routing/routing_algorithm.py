@@ -221,7 +221,7 @@ class MultiAgentAlgorithm(ABC):
         """
         pending_goals = self.agent_goals[agent_id]  # current list of remaining goals
         if len(pending_goals) > 1:
-            pending_goals = pending_goals.pop(0)
+            self.agent_goals[agent_id] = pending_goals[1:]
 
     def add_agent_goal(self, agent_id: int, location: tuple) -> None:
         """

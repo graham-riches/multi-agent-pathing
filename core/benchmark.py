@@ -31,8 +31,8 @@ class BenchmarkRunner:
         # Benchmark simulation properties
         self._routing_algorithm = None
         self._manager_algorithm = None
-        self._on_fail_cycles = 10000
-        self._on_fail_squares = 1000
+        self._on_fail_cycles = 15000
+        self._on_fail_squares = 200
         self.time_step = None
         self.dpi = None
         self.render = False
