@@ -1,0 +1,84 @@
+{
+	"simulation_properties": {
+		"timestep": 0.005,
+		"grid_dpi": 40,
+		"render": true
+	},
+	"arena_properties": {
+		"size": [10, 10],
+		"blockages": []
+	},
+	"agents": [{
+			"id": 0,
+			"location": [2, 2],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 1,
+			"location": [3, 3],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 2,
+			"location": [4, 4],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 3,
+			"location": [5, 5],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		},
+		{
+			"id": 4,
+			"location": [6, 6],
+			"acceleration": 2.0,
+			"deceleration": 3.0,
+			"velocity": 4.0
+		}
+	],
+	"tasks": [
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 0,
+				"location": [[9, 9], [0, 5], [0, 9], [9, 9]]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 1,
+				"location": [[7, 7], [0, 5], [0, 9], [7, 7]]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 2,
+				"location": [[5, 5], [0, 5], [0, 9], [5, 5]]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 3,
+				"location": [[3, 3], [0, 5], [0, 9], [3, 3]]
+			}
+		},
+		{
+			"task_id": "route",
+			"task_parameters": {
+				"agent_id": 4,
+				"location": [[1, 1], [0, 5], [0, 9], [1, 1]]
+			}
+		}
+	]
+}

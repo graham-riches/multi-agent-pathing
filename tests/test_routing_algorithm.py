@@ -80,10 +80,27 @@ class TestMultiAgentAlgorithm(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_is_simulation_completed(self):
-        self.routing_manager.set_agent_goal(0, (0, 0))
-        self.routing_manager.set_agent_goal(1, (5, 5))
+    def test_is_simulation_completed_passes_if_final_goal_reached(self):
+        self.routing_manager.add_agent_goal(0, (0, 0))
+        self.routing_manager.add_agent_goal(1, (5, 5))
         self.assertTrue(self.routing_manager.is_simulation_complete())
+
+    def test_simulation_not_completed_if_final_goal_not_reached(self):
+        # add the current location as a segment, but also add a second location for each agent
+        self.routing_manager.add_agent_goal(0, (0, 0))
+        self.routing_manager.add_agent_goal(1, (5, 5))
+        self.routing_manager.add_agent_goal(0, (1, 1))
+        self.routing_manager.add_agent_goal(1, (4, 4))
+        self.assertFalse(self.routing_manager.is_simulation_complete())
+
+    def test_update_agent_goal(self):
+        self.routing_manager.add_agent_goal(0, (0, 0))
+        self.routing_manager.add_agent_goal(0, (1, 1))
+        self.assertTrue(self.routing_manager.is_agent_at_goal(0))
+        self.routing_manager.update_agent_goal(0)
+        self.assertTupleEqual((1, 1), self.routing_manager.agent_goals[0][0])
+        self.assertFalse(self.routing_manager.is_agent_at_goal(0))
+        self.assertFalse(self.routing_manager.is_simulation_complete())
 
     def test_routing_blockages(self):
         move_x_task = AgentTask(AgentTasks.MOVE, [AgentCoordinates.X, 3])
@@ -118,7 +135,7 @@ class TestMultiAgentAlgorithm(unittest.TestCase):
         self.assertTrue(self.routing_manager.initialized)
 
     def test_is_agent_at_goal(self):
-        self.routing_manager.set_agent_goal(0, (0, 0))
+        self.routing_manager.add_agent_goal(0, (0, 0))
         self.assertTrue(self.routing_manager.is_agent_at_goal(0))
 
     def test_start_new_task(self):

@@ -64,6 +64,12 @@ class SequentialRerouting(MultiAgentAlgorithm):
                 if not self.is_agent_at_goal(idx):
                     self.start_new_task(idx)
 
+                # check for new goals if the current goal is completed
+                if self.is_agent_at_goal(idx):
+                    if not self.agent_goals_completed(idx):
+                        self.update_agent_goal(idx)
+                        self.route_on_completion()
+
     def route(self, agent_id: int, target: tuple) -> None:
         """
         route an agent to a target location
@@ -117,8 +123,9 @@ class SequentialRerouting(MultiAgentAlgorithm):
         """
         distance_dict = dict()
         for agent_id, agent in enumerate(self.agents):
-            distance_x = abs(self.agent_goals[agent_id][0] - agent.location.X)
-            distance_y = abs(self.agent_goals[agent_id][1] - agent.location.Y)
+            agent_current_goal = self.agent_goals[agent_id][0]
+            distance_x = abs(agent_current_goal[0] - agent.location.X)
+            distance_y = abs(agent_current_goal[1] - agent.location.Y)
             distance_dict[agent_id] = distance_x + distance_y
         # sort the dict and get the list of agents out of it
         sorted_by_distance = {dist: agent_id for dist, agent_id in sorted(distance_dict.items(), key=lambda item: item[1])}
@@ -136,4 +143,5 @@ class SequentialRerouting(MultiAgentAlgorithm):
 
         for agent_id in agents_by_distance:
             if (not self.is_agent_at_goal(agent_id)) and (not self.active_agents[agent_id]):
-                self.route(agent_id, self.agent_goals[agent_id])
+                agent_goal = self.agent_goals[agent_id][0]
+                self.route(agent_id, agent_goal)

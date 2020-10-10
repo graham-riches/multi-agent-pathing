@@ -127,7 +127,7 @@ class MultiAgentAlgorithm(ABC):
         self.active_agents = [False for agent in self.agents]
         self.agent_tasks = [list() for agent in self.agents]  # empty task list for each agent
         self.agent_reserved_squares = [list() for agent in self.agents]  # empty reserved squares lists
-        self.agent_goals = [None for agent in self.agents]  # goal location for each agent
+        self.agent_goals = [list() for agent in self.agents]  # goal locations list for each agent
         self.agent_callbacks = {AgentEvent.TASK_COMPLETED: self.agent_move_completed_callback}
         self.agent_routing_state = [None for agent in self.agents]
         self.agent_max_distance = [1000 for agent in self.agents]
@@ -167,42 +167,67 @@ class MultiAgentAlgorithm(ABC):
         :return:
         """
         for agent_id, agent in enumerate(self.agents):
-            goal = self.agent_goals[agent_id]
-            if goal is not None:
-                self.route(agent_id, goal)
+            goals = self.agent_goals[agent_id]
+            if goals is not None:
+                first_goal = goals[0]
+                self.route(agent_id, first_goal)
         self.initialized = True
 
     def is_simulation_complete(self) -> bool:
         """
         Returns true if all agents have successfully reached their target locations
+        and have no remaining tasks in their queue
         :return: boolean
         """
         for idx, agent in enumerate(self.agents):
-            if not self.is_agent_at_goal(idx):
+            if not self.is_agent_at_goal(idx) or not self.agent_goals_completed(idx):
                 return False
         return True
 
+    def agent_goals_completed(self, agent_id: int) -> bool:
+        """
+        check if an agent has completed all of its goal routed
+        :param agent_id: the agent ID
+        :return: true if the agent has completed all goal routes
+        """
+        pending_goals = self.agent_goals[agent_id]  # current list of remaining goals
+        if len(pending_goals) > 1:
+            return False
+        else:
+            return True
+
     def is_agent_at_goal(self, agent_id: int) -> bool:
         """
-        check if an agent has reached its goal location
+        check if an agent has reached its current goal location
         :param agent_id: the id of the agent
         :return: boolean
         """
         agent = self.agents[agent_id]
         location = (agent.location.X, agent.location.Y)
-        if location != self.agent_goals[agent_id]:
+        current_goal = self.agent_goals[agent_id][0]
+        if location != current_goal:
             return False
         else:
             return True
 
-    def set_agent_goal(self, agent_id: int, location: tuple) -> None:
+    def update_agent_goal(self, agent_id: int) -> None:
+        """
+        Update an agents current goal by popping the the last completed goal from the agents goal list
+        :param agent_id: the agent id
+        :return: None
+        """
+        pending_goals = self.agent_goals[agent_id]  # current list of remaining goals
+        if len(pending_goals) > 1:
+            pending_goals = pending_goals.pop(0)
+
+    def add_agent_goal(self, agent_id: int, location: tuple) -> None:
         """
         set the goal location for an agent. The algorithm will continually route to here until 'Done'
         :param agent_id: the id of the agent
         :param location: the target/goal location
         :return: None
         """
-        self.agent_goals[agent_id] = location
+        self.agent_goals[agent_id].append(location)
 
     def add_agent_task(self, agent_id: int, task: AgentTask) -> None:
         """

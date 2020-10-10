@@ -177,13 +177,13 @@ class AgentMotionProfile:
             accel_actual_time = (2 * accel_actual_dist / self._acceleration)**0.5
             decel_actual_time = (2 * decel_actual_dist / self._deceleration)**0.5
             total_time = accel_actual_time + decel_actual_time
-            samples = round(total_time / timestep)
+            samples = int(round(total_time / timestep))
             self.time_vector = np.linspace(0, total_time, samples)
             accel_profile = np.ones(samples)
             vel_profile = np.zeros(samples)
 
             # determine how samples are accelerating and how many are decelerating
-            accel_done_sample = round(samples*accel_actual_time / total_time)
+            accel_done_sample = int(round(samples*accel_actual_time / total_time))
             accel_profile[0:accel_done_sample] = move_dir * self._acceleration
             accel_profile[accel_done_sample:-1] = -1 * move_dir * self._deceleration
             vel_profile[0:accel_done_sample] = self.time_vector[0:accel_done_sample]*move_dir*self._acceleration
@@ -197,12 +197,12 @@ class AgentMotionProfile:
             total_time = const_vel_time + self._accel_time + self._decel_time
 
             # create the acceleration profile
-            samples = round(total_time / timestep)
+            samples = int(round(total_time / timestep))
             self.time_vector = np.linspace(0, total_time, samples)
             accel_profile = np.zeros(samples)
             vel_profile = np.zeros(samples)
-            accel_samples = round(samples * self._accel_time / total_time)
-            decel_samples = round(samples * self._decel_time / total_time)
+            accel_samples = int(round(samples * self._accel_time / total_time))
+            decel_samples = int(round(samples * self._decel_time / total_time))
             const_vel_samples = samples - (accel_samples + decel_samples)
             accel_profile[0:accel_samples] = move_dir * self._acceleration
             accel_profile[-decel_samples:-1] = -1 * move_dir * self._deceleration

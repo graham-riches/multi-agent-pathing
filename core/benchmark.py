@@ -144,9 +144,10 @@ class BenchmarkRunner:
         for task in self.tasks:
             if task['task_id'] == 'route':
                 parameters = task['task_parameters']
-                target_location = parameters['location']
-                goal = (target_location[0], target_location[1])
-                self._manager_algorithm.set_agent_goal(parameters['agent_id'], goal)
+                targets = parameters['location']
+                for goal in targets:
+                    new_goal = (goal[0], goal[1])
+                    self._manager_algorithm.add_agent_goal(parameters['agent_id'], new_goal)
 
         # initialize the simulation and run until complete
         self._manager_algorithm.initialize()
@@ -173,11 +174,8 @@ if __name__ == '__main__':
     runner.load_configuration()
     # create a new algorithm and attach it to the simulation
     a_star = AStar(runner.arena, runner.agents)
-    a_star.inline_factor = 1.58479514
-    a_star.turn_factor = 0.08078503
     runner.algorithm = a_star
     routing_manager = SequentialRerouting(runner.arena, runner.agents, runner.algorithm)
-    routing_manager.agent_max_distance = [3, 8, 8, 5, 4, 6, 7, 8, 9, 2]
     routing_manager.route_by_most_distant = False
     runner.routing_manager = routing_manager
     run_cycles, distance = runner.run()
