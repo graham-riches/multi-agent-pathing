@@ -35,7 +35,7 @@ class BenchmarkRunner:
         self._on_fail_squares = 200
         self.time_step = None
         self.dpi = None
-        self.render = False
+        self._render = False
         self.renderer = None
         self.biased_grid = None
         self.routing_manager = None
@@ -59,6 +59,17 @@ class BenchmarkRunner:
     def routing_manager(self, manager: MultiAgentAlgorithm) -> None:
         self._manager_algorithm = manager
 
+    @property
+    def render(self) -> bool:
+        return self._render
+
+    @render.setter
+    def render(self, enable: bool) -> None:
+        self._render = enable
+        if enable:
+            self.renderer = Renderer(self.arena, self.agents, self.routing_manager,
+                                     self.biased_grid, self.time_step, self.dpi)
+
     def parse_simulation_properties(self) -> None:
         """
         Parse the configuration dictionary to get the simulation properties
@@ -67,7 +78,7 @@ class BenchmarkRunner:
         sim_config = self.config['simulation_properties']
         self.time_step = sim_config['timestep']
         self.dpi = sim_config['grid_dpi']
-        self.render = sim_config['render']
+        self._render = sim_config['render']
 
     def parse_agents(self) -> None:
         """
@@ -123,7 +134,7 @@ class BenchmarkRunner:
         self.parse_agents()
         self.parse_tasks()
         # create the renderer if required
-        if self.render:
+        if self._render:
             self.renderer = Renderer(self.arena, self.agents, self.routing_manager,
                                      self.biased_grid, self.time_step, self.dpi)
 

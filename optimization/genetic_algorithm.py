@@ -119,11 +119,11 @@ class MultiObjectiveGeneticAlgorithm:
             os.mkdir(self._plots_directory)
 
     @property
-    def save_data(self) -> bool:
+    def save(self) -> bool:
         return self._save_data
 
-    @save_data.setter
-    def save_data(self, enable: bool) -> None:
+    @save.setter
+    def save(self, enable: bool) -> None:
         self._save_data = enable
 
     @property
@@ -234,6 +234,8 @@ class MultiObjectiveGeneticAlgorithm:
                 # cast integer parameters if required
                 if self._parameter_is_integer[parameter]:
                     population[individual, parameter] = round(population[individual, parameter], 0)
+            # log the individual
+            print('GA Progress: Generation {}, Individual {}'.format(self._current_generation, individual + 1))
             # calculate fitness
             f1, f2 = self._fitness_function(population[individual, 0:self._total_parameters])
             # assign the fitness values to the 2D population array for the current individual
@@ -534,7 +536,8 @@ class MultiObjectiveGeneticAlgorithm:
         plt.ylabel(self._f2_plot_label)
         plt.title('Fitness progress, Generation: {}'.format(self._current_generation))
         plt.legend(loc=1)
-        save_path = os.path.join(self._plots_directory, 'Generation{}.png'.format(self._current_generation))
+        save_path = os.path.join(self._plots_directory, '{}_generation{}.png'.format(self._filename,
+                                                                                     self._current_generation))
         plt.savefig(save_path, bbox_inches='tight')
         plt.show(block=False)
         plt.draw()
@@ -601,6 +604,8 @@ class MultiObjectiveGeneticAlgorithm:
 
             # save it
             self._population_history[generation - 1, :, :] = self._population
+            if self._save_data:
+                self.save_data(self.filename)
 
             # plot it
             self.plot_pareto()
