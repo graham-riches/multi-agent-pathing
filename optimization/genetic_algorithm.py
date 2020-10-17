@@ -60,7 +60,8 @@ import numpy as np
 import os
 import random as rd
 import matplotlib.pylab as plt
-from optimization.kursawe import get_kursawe_fitness
+import multiprocessing as mp
+import time
 
 
 class MultiObjectiveGeneticAlgorithm:
@@ -110,6 +111,7 @@ class MultiObjectiveGeneticAlgorithm:
         self._maximum_child_crossovers = 3  # maximum number of crossovers applied per child
 
         # debugging and data saving attributes
+        self._run_parallel = False
         self._save_data = False
         self._filename = 'test'
         self._plots_directory = 'PLOTS'  # create if it does not exist
@@ -117,6 +119,14 @@ class MultiObjectiveGeneticAlgorithm:
         self._f2_plot_label = 'f2'
         if not os.path.exists(self._plots_directory):
             os.mkdir(self._plots_directory)
+
+    @property
+    def parallel(self) -> bool:
+        return self._run_parallel
+
+    @parallel.setter
+    def parallel(self, enable: bool) -> None:
+        self._run_parallel = enable
 
     @property
     def save(self) -> bool:
@@ -222,6 +232,19 @@ class MultiObjectiveGeneticAlgorithm:
                 population[:, parameter] = population[:, parameter].round()
         return population
 
+    def evaluate_individual(self, individual: np.ndarray) -> tuple:
+        """
+        single function to evaluate an individual that calculates its fitness
+        :param individual: the individual to evaluate
+        :return: (individual id, f1 fitness, f2 fitness)
+        """
+        # cast integer parameters if required
+        for parameter in range(self._total_parameters):
+            if self._parameter_is_integer[parameter]:
+                individual[parameter] = round(individual[parameter], 0)
+        f1, f2 = self._fitness_function(individual[0:self._total_parameters])
+        return individual[-1], f1, f2
+
     def evaluate_population(self, population: np.ndarray) -> np.ndarray:
         """
         Evaluate the current population by calculating the fitness of each individual and ranking them
@@ -230,23 +253,56 @@ class MultiObjectiveGeneticAlgorithm:
         """
         # run through all individuals and calculate their fitness
         for individual in range(self._population_size):
-            for parameter in range(self._total_parameters):
-                # cast integer parameters if required
-                if self._parameter_is_integer[parameter]:
-                    population[individual, parameter] = round(population[individual, parameter], 0)
             # log the individual
             print('GA Progress: Generation {}, Individual {}'.format(self._current_generation, individual + 1))
+            # create an individual and tack on its ID
+            new_individual = population[individual, :]
+            new_individual = np.append(new_individual, individual)
             # calculate fitness
-            f1, f2 = self._fitness_function(population[individual, 0:self._total_parameters])
+            idx, f1, f2 = self.evaluate_individual(new_individual)
             # assign the fitness values to the 2D population array for the current individual
-            population[individual, self._f1_index] = f1
-            population[individual, self._f2_index] = f2
+            population[int(idx), self._f1_index] = f1
+            population[int(idx), self._f2_index] = f2
+        return population
+
+    def evaluate_population_parallel(self, population: np.ndarray) -> np.ndarray:
+        """
+        spawn a multiprocessing pool and execute the population evaluation in parallel
+        :param population: the population to evaluate
+        :return: ranked population
+        """
+        pool = mp.Pool(mp.cpu_count())
+        # serialize the individuals into an iterable and append their idx to the end so that it can be sorted
+        # post parallel processing (indices likely out of order)
+        size = np.shape(population)
+        individuals = [population[i, :] for i in range(size[0])]
+        for idx, individual in enumerate(individuals):
+            individuals[idx] = np.append(individual, idx)
+
+        # evaluate each individual in parallel
+        rankings = pool.map(self.evaluate_individual, individuals)
+
+        # unpack the results and place them in the population
+        for individual in rankings:
+            idx = int(individual[0])
+            f1 = individual[1]
+            f2 = individual[2]
+            population[int(idx), self._f1_index] = f1
+            population[int(idx), self._f2_index] = f2
+        pool.close()
+        return population
+
+    def update_fitness_bounds(self, population: np.ndarray) -> None:
+        """
+        update the min/max fitness bounds of the algorithm based on a population
+        :param population: the population
+        :return: None
+        """
         # get the bounds for the current population
         self._fitness_bounds['min_f1'] = min(population[:, self._f1_index])
         self._fitness_bounds['max_f1'] = max(population[:, self._f1_index])
         self._fitness_bounds['min_f2'] = min(population[:, self._f2_index])
         self._fitness_bounds['max_f2'] = max(population[:, self._f2_index])
-        return population
 
     def dominates(self, individual_1: list, individual_2: list) -> bool:
         """
@@ -558,7 +614,11 @@ class MultiObjectiveGeneticAlgorithm:
         """
         # setup the initial generation
         self._population = self.create_population()
-        self._population = self.evaluate_population(self._population)
+        if self._run_parallel:
+            self._population = self.evaluate_population_parallel(self._population)
+        else:
+            self._population = self.evaluate_population(self._population)
+        self.update_fitness_bounds(self._population)
         self._population = self.pareto_rank(self._population)
         self._population = self.crowded_rank(self._population)
         self.plot_pareto()
@@ -585,7 +645,15 @@ class MultiObjectiveGeneticAlgorithm:
             child_population = self.mutation(child_population)
 
             # Evaluate performance in both objectives for each member of population C
-            child_population = self.evaluate_population(child_population)
+            start_time = time.time()
+            if self._run_parallel:
+                child_population = self.evaluate_population_parallel(child_population)
+            else:
+                child_population = self.evaluate_population(child_population)
+            print('EVALUATION TIME: {}'.format(time.time() - start_time))
+
+            # update the fitness bounds
+            self.update_fitness_bounds(child_population)
 
             # Add child population to parent population, yielding population R of size 2N
             full_population = np.concatenate((self._population, child_population))
@@ -609,13 +677,3 @@ class MultiObjectiveGeneticAlgorithm:
 
             # plot it
             self.plot_pareto()
-
-
-if __name__ == '__main__':
-    rd.seed(1)
-    parameters = [(-5, 5, False), (-5, 5, False), (-5, 5, False)]
-    size = 100
-    num_generations = 50
-    ga = MultiObjectiveGeneticAlgorithm(parameters, size, num_generations, get_kursawe_fitness)
-    ga.mutation_multiplier = 0.2
-    ga.run()

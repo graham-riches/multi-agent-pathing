@@ -56,6 +56,7 @@ if __name__ == '__main__':
         ga = MultiObjectiveGeneticAlgorithm(simulation.parameters, population_size, generations, simulation.run)
         ga.fitness_one_label = simulation.fitness_one_label
         ga.fitness_two_label = simulation.fitness_two_label
+        ga.parallel = True  # enable pool based population evaluation
         ga.save = simulation.save
         ga.filename = simulation.filename
         ga.run()
