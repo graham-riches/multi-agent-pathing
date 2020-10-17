@@ -7,7 +7,8 @@
 	"arena_properties": {
 		"size": [10, 10],
     	"blockages": [ [3, 3] ],
-		"biases": []
+		"biases": [],
+		"event_squares": []
 	},
 	"agents": [{
 			"id": 0,

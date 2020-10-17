@@ -7,6 +7,7 @@
    
 """
 import numpy as np
+import random as rd
 import sys
 import json
 from routing.routing_algorithm import SingleAgentAlgorithm, MultiAgentAlgorithm
@@ -31,8 +32,9 @@ class BenchmarkRunner:
         # Benchmark simulation properties
         self._routing_algorithm = None
         self._manager_algorithm = None
-        self._on_fail_cycles = 15000
-        self._on_fail_squares = 200
+        self._on_fail_cycles = 25000
+        self._on_fail_squares = 500
+        self._event_squares = None
         self.time_step = None
         self.dpi = None
         self._render = False
@@ -69,6 +71,7 @@ class BenchmarkRunner:
         if enable:
             self.renderer = Renderer(self.arena, self.agents, self.routing_manager,
                                      self.biased_grid, self.time_step, self.dpi)
+            self.renderer.event_tiles = self._event_squares
 
     def parse_simulation_properties(self) -> None:
         """
@@ -113,6 +116,7 @@ class BenchmarkRunner:
         self.arena = sim_arena
         self.biased_grid = BiasedGrid(self.arena.get_dimensions())
         biased_squares = arena['biases']
+        self._event_squares = arena['event_squares']
         for bias in biased_squares:
             self.biased_grid[bias[0], bias[1]] = bias[2]
 
@@ -165,6 +169,10 @@ class BenchmarkRunner:
                 parameters = task['task_parameters']
                 targets = parameters['location']
                 for goal in targets:
+                    # check for empty goals and randomly select from the available event squares
+                    if goal[0] is None:
+                        idx = rd.randint(0, len(self._event_squares) - 1)
+                        goal = self._event_squares[idx]
                     new_goal = (goal[0], goal[1])
                     self._manager_algorithm.add_agent_goal(parameters['agent_id'], new_goal)
 
@@ -197,5 +205,6 @@ if __name__ == '__main__':
     routing_manager = SequentialRerouting(runner.arena, runner.agents, runner.algorithm)
     routing_manager.route_by_most_distant = False
     runner.routing_manager = routing_manager
+    runner.render = True
     run_cycles, distance = runner.run()
     print('BENCHMARK: Simulation cycles {}'.format(run_cycles))

@@ -9,6 +9,7 @@ from routing.routing_algorithm import MultiAgentAlgorithm, SingleAgentAlgorithm
 from routing.status import RoutingStatus
 from core.arena import Arena
 from core.agent import *
+from core.tile import TileState
 
 
 class SequentialRerouting(MultiAgentAlgorithm):
@@ -84,11 +85,22 @@ class SequentialRerouting(MultiAgentAlgorithm):
         while len(self.agent_reserved_squares[agent_id]) > 0:
             self.clear_last_task_blockage(agent_id)
 
+        # check that the target location is free, and if not, route to a nearby square
+        tile_state = self.arena.get_tile_state(target[0], target[1])
+        agent_locations = [(agent.location.X, agent.location.Y) for agent in self.agents]
+        if tile_state == TileState.RESERVED or tile_state == TileState.AGENT_TARGET or target in agent_locations:
+            neighbours = self.arena.get_neighbours(target[0], target[1])
+            for neighbour in neighbours:
+                if self.arena.get_tile_state(neighbour[0], neighbour[1]) == TileState.FREE:
+                    target = neighbour
+                    break
+
         agent = self.agents[agent_id]
-        # reset the main routing algorithm
+        # reset the main routing algorithm and route the agent
         self.routing_algorithm.reset()
         status = self.routing_algorithm.route(agent, target)
         self.agent_routing_state[agent_id] = status
+
         if status == RoutingStatus.SUCCESS:
             # create the path and queue the first routing task
             route_status = self.routing_algorithm.create_path()
@@ -109,7 +121,8 @@ class SequentialRerouting(MultiAgentAlgorithm):
         blocked = True
         for idx, agent in enumerate(self.agents):
             if agent.state != AgentState.IDLE:
-                blocked = False
+                return False
+        self.route_on_completion()
         self._stall_detect_count = self._stall_detect_count + 1 if blocked else 0
         if self._stall_detect_count >= self._detect_stalled_simulation_cycles:
             return True

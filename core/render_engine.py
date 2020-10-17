@@ -52,12 +52,13 @@ class Renderer:
         self.biased_grid = biased_grid
         self.agent_selected = None
         self._render_directions = True
+        self._event_tiles = None
 
         # dict of color keys
         self.colors_dict = {'tile_free': (180, 180, 180), 'tile_blocked': (0, 0, 0), 'tile_reserved': (60, 60, 60),
                             'tile_target': (200, 135, 135), 'grid_lines': (255, 255, 255), 'agent': COLORS,
                             'agent_selected': (245, 100, 90), 'agent_border': (0, 0, 0), 'soft_bias': (225, 225, 225),
-                            'hard_bias': (200, 80, 80)}
+                            'hard_bias': (200, 80, 80), 'event_tile': (255, 255, 200)}
         self.total_elements = len(self.colors_dict)
 
     @property
@@ -72,6 +73,35 @@ class Renderer:
     def render_directions(self, enable: bool) -> None:
         self._render_directions = enable
 
+    @property
+    def event_tiles(self) -> list:
+        return self._event_tiles
+
+    @event_tiles.setter
+    def event_tiles(self, tiles: list) -> None:
+        self._event_tiles = tiles
+
+    def render_tile(self, x: int, y: int, color: tuple) -> None:
+        """
+        render a single tile
+        :param x: x location
+        :param y: y location
+        :param color: RGB color tuple
+        :return: None
+        """
+        y_pos = y * self.dpi
+        x_pos = x * self.dpi
+
+        rect_location = (x_pos, y_pos, self.dpi, self.dpi)
+        pygame.draw.rect(self.screen, color, rect_location)
+        # draw the direction bias
+        if self._render_directions:
+            bias = self.biased_grid[int(x), int(y)]
+            if bias >= BiasedDirection.ONLY_X_POSITIVE:
+                self.render_direction_bias(int(x), int(y), bias)
+        # draw the grid rectangles
+        pygame.draw.rect(self.screen, self.colors_dict['grid_lines'], rect_location, 1)
+
     def render_arena(self) -> None:
         """
         render the simulation arena
@@ -79,8 +109,6 @@ class Renderer:
         """
         for x in range(self.x_size):
             for y in range(self.y_size):
-                y_pos = y * self.dpi
-                x_pos = x * self.dpi
                 if self.arena.get_tile_state(x, y) == TileState.FREE:
                     color = self.colors_dict['tile_free']
                 elif self.arena.get_tile_state(x, y) == TileState.BLOCKED:
@@ -89,16 +117,11 @@ class Renderer:
                     color = self.colors_dict['tile_target']
                 else:
                     color = self.colors_dict['tile_reserved']
-                # draw the tile
-                rect_location = (x_pos, y_pos, self.dpi, self.dpi)
-                pygame.draw.rect(self.screen, color, rect_location)
-                # draw the direction bias
-                if self._render_directions:
-                    bias = self.biased_grid[int(x), int(y)]
-                    if bias >= BiasedDirection.ONLY_X_POSITIVE:
-                        self.render_direction_bias(int(x), int(y), bias)
-                # draw the grid rectangles
-                pygame.draw.rect(self.screen, self.colors_dict['grid_lines'], rect_location, 1)
+                self.render_tile(x, y, color)
+        if self._event_tiles is not None:
+            for tile in self._event_tiles:
+                color = self.colors_dict['event_tile']
+                self.render_tile(tile[0], tile[1], color)
 
     def render_direction_bias(self, x: int, y: int, bias: BiasedDirection) -> None:
         """
